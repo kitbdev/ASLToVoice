@@ -1,22 +1,36 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package leapwekaasltest;
 
-/**
- *
- * @author Ian
- */
+import com.leapmotion.leap.*;
+import java.io.IOException;
+
 public class LeapWekaASLTest {
 
-    /**
-     * @param args the command line arguments
-     */
     public static void main(String[] args) {
-        // TODO code application logic here
+        SampleListener listener = new SampleListener();
+        Controller controller = new Controller();
         
+        controller.addListener(listener);
+//        controller.frame();
+        
+        System.out.println("Press Enter to quit...");
+        try {
+            System.in.read();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        controller.removeListener(listener);
     }
     
+}
+
+class SampleListener extends Listener {
+
+    public void onConnect(Controller controller) {
+        System.out.println("Connected");
+    }
+
+    public void onFrame(Controller controller) {
+        System.out.println("Frame available");
+    }
 }
