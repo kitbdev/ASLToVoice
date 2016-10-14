@@ -1,18 +1,38 @@
 
+
 package leapwekaasltest;
 
 import com.leapmotion.leap.*;
+
 import java.io.IOException;
 
 public class LeapWekaASLTest {
-
-    public static void main(String[] args) {
-        SampleListener listener = new SampleListener();
-        Controller controller = new Controller();
-        
-        controller.addListener(listener);
-        
-        //while(true){}
+    public static Controller controller = new Controller();
+    //public static LeapSensor leapSensor = new LeapSensor();
+    public static void main(String[] args) 
+                throws InterruptedException, IOException {
+        LeapSensor.SaveData();
+        if(controller.isConnected()) {
+            System.out.println("Controller connected!");
+            System.out.println("Press Enter to quit...");
+            long timeSinceStart = System.currentTimeMillis();
+            //long dt = 0, frameStart = 0;
+            long pollRate = 1/100;// 1 poll every .1 seconds
+            boolean exit = false;
+            while(!exit) {
+                long frameStart = System.currentTimeMillis();
+                
+                if (System.in.available() > 0) {
+                    exit = true;
+                }
+                Update();
+                long dt = System.currentTimeMillis() - frameStart; // time that this update took
+                long timeLeftThisFrame = pollRate - dt;
+                Thread.sleep(timeLeftThisFrame);// sleep for updates/sec-dt
+            }
+        } else {
+            System.out.println("No controller connected!");
+        }
         
         System.out.println("Press Enter to quit...");
         try {
@@ -20,24 +40,10 @@ public class LeapWekaASLTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("Quiting");
-        controller.removeListener(listener);
     }
-    
-}
-
-class SampleListener extends Listener {
-
-    public void onConnect(Controller controller) {
-        System.out.println("Connected");
-    }
-
-    public void onFrame(Controller controller) {
-        System.out.println("Frame available");
+    public static void Update() {
         Frame frame = controller.frame();
-        System.out.println("Frame id: " + frame.id()
-                   + ", timestamp: " + frame.timestamp()
-                   + ", hands: " + frame.hands().count()
-                   + ", fingers: " + frame.fingers().count());
+        LeapSensor.ProcessFrame(frame);
+        
     }
 }
