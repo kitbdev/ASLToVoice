@@ -1,5 +1,5 @@
 
-package leapwekaasltest;
+package leapwekaasl;
 
 import com.leapmotion.leap.*;
 import java.io.File;
