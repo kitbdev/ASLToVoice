@@ -8,10 +8,9 @@ import java.io.IOException;
 
 public class LeapWekaASLTest {
     public static Controller controller = new Controller();
-    //public static LeapSensor leapSensor = new LeapSensor();
+    public static LeapSensor leapSensor = new LeapSensor();
     public static void main(String[] args) 
                 throws InterruptedException, IOException {
-        LeapSensor.SaveData();
         if(controller.isConnected()) {
             System.out.println("Controller connected!");
             System.out.println("Press Enter to quit...");
@@ -22,7 +21,6 @@ public class LeapWekaASLTest {
             boolean exit = false;
             while(!exit) {
                 long frameStart = System.currentTimeMillis();
-                
                 if (System.in.available() > 0) {
                     exit = true;
                 }
@@ -45,7 +43,7 @@ public class LeapWekaASLTest {
     }
     public static void Update() {
         Frame frame = controller.frame();
-        LeapSensor.ProcessFrame(frame);
+        leapSensor.ProcessFrame(frame);
         
     }
 }

@@ -15,38 +15,46 @@ import java.util.ArrayList;
  * @author Ian
  */
 public class LeapSensor {
-    public static long lastFrameID = 0;
+    public long lastFrameID = 0;
     boolean recording = false;
     List<Float> records = new ArrayList<>();
-    int numRecords;
-    public static void ProcessFrame(Frame frame) {
+    int numFrames = 0;
+    public void ProcessFrame(Frame frame) {
         if (recording) {
-            
-        }
-        if (lastFrameID != frame.id()) {
-            //HandList hands = frame.hands();
-            Hand hand = frame.hands().frontmost();
-            if (hand.isValid()) {
-                //hand.direction();
-                // TODO: track by id?
-                PointableList pointables = frame.pointables();
-                FingerList fingers = frame.fingers();
-                ToolList tools = frame.tools();
-                // TODO: add to records
-            }
+            if (lastFrameID != frame.id()) {
+                //HandList hands = frame.hands();
+                //what to do with multiple hands?
+                Hand hand = frame.hands().frontmost();
+                if (hand.isValid()) {
+                    //hand.direction();
+                    // TODO: track by id?
+                    //PointableList pointables = frame.pointables();
+                    //ToolList tools = frame.tools();
+                    FingerList fingers = hand.fingers();
+                    // TODO: add numbers to records
+                    
+                    numFrames++;
+                }
+            } 
         }
         lastFrameID = frame.id();
         System.out.print("");
     }
+    // start recording with the leap
     public void StartRecording(){
         recording = true;
-        // clear list and id stuff
+        lastFrameID = 0;
+        ClearRecording();
     }
+    // stop recording
     public void StopRecording(){
         recording = false;
+        System.out.println(numFrames+" frames recorded.");
     }
+    // clear the data we recorded
     public void ClearRecording(){
-        
+        records.clear();
+        numFrames = 0;
     }
     public void SaveRecording() throws FileNotFoundException {
         LocalDateTime date = LocalDateTime.now();
