@@ -1,6 +1,0 @@
-output data to file
-use weka (on file or in program?)
-
-leap finger bones?
-
-use marytts (server client?)
