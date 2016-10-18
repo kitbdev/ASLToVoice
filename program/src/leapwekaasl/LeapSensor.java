@@ -56,6 +56,9 @@ public class LeapSensor {
         records.clear();
         numFrames = 0;
     }
+    public boolean HasData() {
+        return !records.isEmpty();
+    }
     public void SaveRecording() throws FileNotFoundException {
         LocalDateTime date = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("kkmmss_ddMMyy");//hourminutesecond_daymonthyear
