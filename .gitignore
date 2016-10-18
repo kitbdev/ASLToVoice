@@ -12,6 +12,6 @@
 hs_err_pid*
 /leapWekaASLTest/nbproject/private/
 /leapWekaASLTest/build/
-/leapWekaASLTest/dist/
+#/leapWekaASLTest/dist/
 
 docs/
