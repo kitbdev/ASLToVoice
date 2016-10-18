@@ -10,8 +10,8 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
-/leapWekaASLTest/nbproject/private/
-/leapWekaASLTest/build/
-#/leapWekaASLTest/dist/
+/program/nbproject/private/
+/program/build/
+#/program/dist/
 
 docs/
