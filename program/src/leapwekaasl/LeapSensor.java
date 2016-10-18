@@ -8,32 +8,52 @@ import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-
+import java.util.List;
+import java.util.ArrayList;
 /**
  * This class will process the frame and output to a file
  * @author Ian
  */
 public class LeapSensor {
     public static long lastFrameID = 0;
-    
+    boolean recording = false;
+    List<Float> records = new ArrayList<>();
+    int numRecords;
     public static void ProcessFrame(Frame frame) {
+        if (recording) {
+            
+        }
         if (lastFrameID != frame.id()) {
-            HandList hands = frame.hands();
-            PointableList pointables = frame.pointables();
-            FingerList fingers = frame.fingers();
-            ToolList tools = frame.tools();
+            //HandList hands = frame.hands();
+            Hand hand = frame.hands().frontmost();
+            if (hand.isValid()) {
+                //hand.direction();
+                // TODO: track by id?
+                PointableList pointables = frame.pointables();
+                FingerList fingers = frame.fingers();
+                ToolList tools = frame.tools();
+                // TODO: add to records
+            }
         }
         lastFrameID = frame.id();
         System.out.print("");
     }
-    
-    public static void SaveData() 
-            throws FileNotFoundException {
+    public void StartRecording(){
+        recording = true;
+        // clear list and id stuff
+    }
+    public void StopRecording(){
+        recording = false;
+    }
+    public void ClearRecording(){
+        
+    }
+    public void SaveRecording() throws FileNotFoundException {
         LocalDateTime date = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("kkmmss_ddMMyy");//hourminutesecond_daymonthyear
         String text = date.format(formatter);
         String fname = "..\\savedata\\"+text+".csv";
-        System.out.println(fname);
+        System.out.println("Saving to "+fname+" ...");
         PrintWriter pw = new PrintWriter(new File(fname));
         StringBuilder sb = new StringBuilder();
         sb.append("id,");
@@ -51,9 +71,12 @@ public class LeapSensor {
         
         pw.write(sb.toString());
         pw.close();
-        System.out.println("done!");
+        System.out.println("Saved!");
     }
-    public static void AddPosRotVel(StringBuilder sb, String name) {
+    public void LoadRecording(){
+        
+    }
+    void AddPosRotVel(StringBuilder sb, String name) {
         sb.append(name);
         sb.append("_pos_x,");
         sb.append(name);
