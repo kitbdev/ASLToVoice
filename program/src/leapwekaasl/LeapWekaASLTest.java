@@ -52,8 +52,11 @@ public class LeapWekaASLTest {
                 if (s == 'r') {
                     if (connected) {                     
                         System.out.println(s+" is not implemented yet");   
-                        // clear data
-                        //Record();
+                        try {
+                            Record();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     } else {
                         System.out.println("controller not connected!");   
                     }
@@ -77,10 +80,12 @@ public class LeapWekaASLTest {
             //}
         }
     }
-    public static void Record() 
-            throws InterruptedException, IOException {
+    public static void Record() throws IOException, InterruptedException {
         // have loop and stuff
-        System.out.println("Press Enter to quit...");
+        System.out.println("Press Enter to stop recording");
+        leapSensor.ClearRecording();
+        leapSensor.StartRecording("Sign"); // replace with some sign
+        
         long timeSinceStart = System.currentTimeMillis();
         //long dt = 0, frameStart = 0;
         long pollRate = 1/100;// 1 poll every .1 seconds

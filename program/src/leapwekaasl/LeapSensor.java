@@ -19,6 +19,7 @@ public class LeapSensor {
     boolean recording = false;
     List<Float> records = new ArrayList<>();
     int numFrames = 0;
+    String sign = "";
     public void ProcessFrame(Frame frame) {
         if (recording) {
             if (lastFrameID != frame.id()) {
@@ -32,7 +33,46 @@ public class LeapSensor {
                     //ToolList tools = frame.tools();
                     FingerList fingers = hand.fingers();
                     // TODO: add numbers to records
-                    
+                    // currently arm, hand, and finger pos rot and vel
+                    Arm arm = hand.arm();
+                    Vector armPos = arm.elbowPosition();
+                    records.add(armPos.getX());
+                    records.add(armPos.getY());
+                    records.add(armPos.getZ());
+                    Vector armDir = arm.direction();
+                    records.add(armDir.getX());
+                    records.add(armDir.getY());
+                    records.add(armDir.getZ());
+                    // no arm vel
+                    // hand
+                    Vector handPos = hand.palmPosition();
+                    records.add(handPos.getX());
+                    records.add(handPos.getY());
+                    records.add(handPos.getZ());
+                    Vector handDir = hand.direction();
+                    records.add(handDir.getX());
+                    records.add(handDir.getY());
+                    records.add(handDir.getZ());
+                    Vector handVel = hand.palmVelocity();
+                    records.add(handVel.getX());
+                    records.add(handVel.getY());
+                    records.add(handVel.getZ());
+                    // fingers
+                    for (int i=0; i<5; i++) {
+                        Finger f = hand.finger(i);
+                        Vector fPos = f.tipPosition();
+                        records.add(fPos.getX());
+                        records.add(fPos.getY());
+                        records.add(fPos.getZ());
+                        Vector fDir = f.direction();
+                        records.add(fDir.getX());
+                        records.add(fDir.getY());
+                        records.add(fDir.getZ());
+                        Vector fVel = f.tipVelocity();// TODO: do we even want velocity?
+                        records.add(fVel.getX());
+                        records.add(fVel.getY());
+                        records.add(fVel.getZ());
+                    }
                     numFrames++;
                 }
             } 
@@ -41,10 +81,11 @@ public class LeapSensor {
         System.out.print("");
     }
     // start recording with the leap
-    public void StartRecording(){
+    public void StartRecording(String signLabel){
         recording = true;
         lastFrameID = 0;
         ClearRecording();
+        sign = signLabel;
     }
     // stop recording
     public void StopRecording(){
@@ -78,8 +119,23 @@ public class LeapSensor {
         }
         sb.append("sign");
         sb.append('\n');
-        // TODO: add data to file, over some # of frames(?)
-        
+        // append the data
+        if (numFrames == 0) {
+            System.out.println("no data to save!");
+        }
+        int dataPerFrame = 9;
+        for (int i=0; i<numFrames; i++) {
+            //TODO: id, frame num, time
+            sb.append(i);
+            sb.append(',');
+            // 
+            for (int j=0; j<dataPerFrame; j++) {
+                sb.append(records.get(i*dataPerFrame+j).toString());
+                sb.append(',');
+            }
+            sb.append(sign);
+            sb.append('\n');
+        }
         pw.write(sb.toString());
         pw.close();
         System.out.println("Saved!");
