@@ -1,10 +1,14 @@
 
-
 package leapwekaasl;
 
 import com.leapmotion.leap.*;
+
+import weka.core.Instances;
+import weka.core.converters.ConverterUtils.DataSource;
+
 import java.util.Scanner;
 import java.io.IOException;
+//import jwsfilechooser;
 
 public class LeapWekaASLTest {
     public static Scanner scanner = new Scanner(System.in);
@@ -12,20 +16,15 @@ public class LeapWekaASLTest {
     public static LeapSensor leapSensor = new LeapSensor();
     
     public static void main(String[] args) 
-                throws InterruptedException, IOException {
+                throws InterruptedException, IOException, Exception {
         if(controller.isConnected()) {
             System.out.println("Controller connected!");
         } else {
             System.out.println("No controller connected!");
         }
+        //DataSource src = new DataSource("file.csv");
         Menu();
         System.out.println("Exiting...");
-//        System.out.println("Press Enter to quit...");
-//        try {
-//            System.in.read();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
     }
     public static void Menu() throws IOException {
         boolean running = true;
@@ -62,14 +61,19 @@ public class LeapWekaASLTest {
                     }
                 } else if (s == 's') {
                     // do something
+                    leapSensor.SaveRecording();
                     if (hasData) {
-                        System.out.println(s+" is not implemented yet");
+                        //System.out.println(s+" is not implemented yet");
+                        //leapSensor.SaveRecording();
                     } else {
                         System.out.println("No Data!");
                     }
                 } else if (s == 'l') {
                     // do something
                     System.out.print(s+" is not implemented yet");
+                    //System.out.println("Enter the file location");
+                    // TODO: what does this actually do?
+                    // for weka?
                 } else if (s == 'e') {
                     running = false;
                     break;
