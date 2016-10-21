@@ -6,6 +6,11 @@ import com.leapmotion.leap.*;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+
 import java.util.Scanner;
 import java.io.IOException;
 //import jwsfilechooser;
@@ -49,6 +54,7 @@ public class LeapWekaASLTest {
                 char s = sIn.toLowerCase().charAt(0);
                 //valid = true;
                 if (s == 'r') {
+                    // record unlabbelled data
                     if (connected) {                     
                         System.out.println(s+" is not implemented yet");   
                         try {
@@ -74,6 +80,26 @@ public class LeapWekaASLTest {
                     //System.out.println("Enter the file location");
                     // TODO: what does this actually do?
                     // for weka?
+                    
+                } else if (s == 'c') {
+                    // load data and classify it
+                    Instances trainData = new Instances(new BufferedReader(
+                            new FileReader(leapSensor.savePath)));
+                    trainData.setClassIndex(trainData.numAttributes() - 1);
+                        
+                    // TODO: revamp structure
+                    // create new traindata file
+                    //  set training data class (sign name)
+                    //  record training data with that name
+                    //   re-record or save to the file
+                    //  end file or record more data
+                    // load trainingdata file
+                    //  select classifier?
+                    //  train trainingdata with classifier
+                    // record sign to identify
+                    //  test imm. (no save needed? try to load directly into weka)
+                            
+                    //Instances labeled = new Instances();
                 } else if (s == 'e') {
                     running = false;
                     break;
@@ -99,6 +125,8 @@ public class LeapWekaASLTest {
             long frameStart = System.currentTimeMillis();
             if (System.in.available() > 0) {
                 exit = true;
+                leapSensor.StopRecording();
+                break;
             }
             Update();
             long dt = System.currentTimeMillis() - frameStart; // time that this update took
