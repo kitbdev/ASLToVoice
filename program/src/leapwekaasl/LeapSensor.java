@@ -21,6 +21,8 @@ public class LeapSensor {
     int numFrames = 0;
     String sign = "";
     String savePath = "";
+    PrintWriter openFile;
+    boolean isFileOpen = false;
     public void ProcessFrame(Frame frame) {
         if (recording) {
             if (lastFrameID != frame.id()) {
@@ -82,14 +84,17 @@ public class LeapSensor {
             } 
         }
         lastFrameID = frame.id();
-        System.out.print("");
     }
     // start recording with the leap
     public void StartRecording(String signLabel){
         recording = true;
         lastFrameID = 0;
         ClearRecording();
-        sign = signLabel;
+        if (isFileOpen && signLabel=="") {
+            // use the last sign
+        } else {
+            sign = signLabel;
+        }
     }
     // stop recording
     public void StopRecording(){
@@ -100,18 +105,24 @@ public class LeapSensor {
     public void ClearRecording(){
         records.clear();
         numFrames = 0;
+        sign = "";
     }
     public boolean HasData() {
         return !records.isEmpty();
     }
-    public void SaveRecording() throws FileNotFoundException {
+    public void StartDataFile(boolean isTrainingData) throws FileNotFoundException {
         LocalDateTime date = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("kkmmss_ddMMyy");//hourminutesecond_daymonthyear
         String text = date.format(formatter);
-        String fname = "..\\savedata\\"+text+".csv";
+        String fname = "..\\savedata\\";
+        if (isTrainingData) {
+            fname += "td_";
+        }
+        fname += text+".csv";
         savePath = fname;
-        System.out.println("Saving to "+fname+" ...");
-        PrintWriter pw = new PrintWriter(new File(fname));
+        System.out.println("New file is "+fname+"");
+        openFile = new PrintWriter(new File(fname));
+        isFileOpen = true;
         StringBuilder sb = new StringBuilder();
         sb.append("id,");
         //TODO: include frame number ?
@@ -122,12 +133,29 @@ public class LeapSensor {
         for (int i=1; i<=5; i++) {
             AddPosRotVel(sb, "finger"+i);
         }
-        sb.append("sign");
+        if (isTrainingData) {
+            sb.append("sign");
+        }
         sb.append('\n');
+        openFile.write(sb.toString());
+    } 
+    public void FinishDataFile() {
+        openFile.close();
+        isFileOpen = false;
+        //System.out.println("Finished file!");
+    }
+    public void SaveRecording() {
+        // TODO: test if file is open
+        if (!isFileOpen) {
+            System.out.println("File not open!");
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
         // append the data
         if (numFrames == 0) {
             System.out.println("no data to save!");
         }
+        LocalDateTime date = LocalDateTime.now();
         int dataPerFrame = 9;
         for (int i=0; i<numFrames; i++) {
             //TODO: id, frame num, time
@@ -141,12 +169,13 @@ public class LeapSensor {
                 sb.append(records.get(i*dataPerFrame+j).toString());
                 sb.append(',');
             }
-            sb.append(sign);
+            if (sign != ""){
+                sb.append(sign);
+            }
             sb.append('\n');
         }
-        pw.write(sb.toString());
-        pw.close();
-        System.out.println("Saved!");
+        openFile.write(sb.toString());
+        System.out.println("Saved!"+sign);
     }
     public void LoadRecording(){
         
