@@ -47,10 +47,7 @@ public class LeapWekaASLTest {
         
         boolean isRecordingTrainingData = false;
         
-        //boolean canRecordTrainingData;
-        
         int framesToRecord = 0;
-        
         
         while (running) {
             connected = controller.isConnected();
@@ -122,7 +119,7 @@ public class LeapWekaASLTest {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    // TODO: weka
+                    // TODO: weka stuff
                     System.out.println("The sign you signed is ");
                     
                 }
@@ -141,14 +138,22 @@ public class LeapWekaASLTest {
                 }
                 if (s == 'i') {
                     framesToRecord = 0;
+                    System.out.println("Will record until a key is pressed.");
                 }
                 if (s == 'f' || s == 'n') {
-                    int n=0;
+                    System.out.print("\nEnter the number of ");
                     if (s == 'n') {
-
+                        System.out.print("seconds");
+                    }else{
+                        System.out.print("frames");
+                    }
+                    System.out.print(" to record for: ");
+                    int n = scanner.nextInt();
+                    if (s == 'n') {
+                        n*=POLLRATE;
                     }
                     framesToRecord = n;
-                
+                    System.out.println("Will record for "+framesToRecord+" frames.");
                 }
                 if (hasRecording) {
                     if (s == 's') {
@@ -174,28 +179,41 @@ public class LeapWekaASLTest {
     }
     public static void Record(String sign, int nframes) throws IOException, InterruptedException {
         // pass in "" to record non-labelled
-        System.out.println("Press Enter to stop recording");
+        if (nframes==0) {
+            System.out.println("Press Enter to stop recording");
+        } else {
+            System.out.println("Recording for "+nframes+", or "+nframes/POLLRATE+" seconds.");
+        }
         leapSensor.ClearRecording();
         leapSensor.StartRecording(sign); // replace with some sign
         // TODO: recording mode (n frames, n sec, until press, until detected stop)
         long timeSinceStart = System.currentTimeMillis();
         //long dt = 0, frameStart = 0;
         
-        // only loop when looking for data
+        // loop while recording
         System.out.println("Recording");
+        int framesLeft = nframes+1;
         boolean exit = false;
         while(!exit) {
             long frameStart = System.currentTimeMillis();
-            if (System.in.available() > 0) {
-                exit = true;
-                leapSensor.StopRecording();
-                break;
+            if (nframes==0) {
+                if (System.in.available() > 0) {
+                    exit = true;
+                    break;
+                }
+            } else {
+                framesLeft--;
+                if (framesLeft <= 0) {
+                    exit = true;
+                    break;
+                }
             }
             Update();
             long dt = System.currentTimeMillis() - frameStart; // time that this update took
             long timeLeftThisFrame = POLLRATE - dt;
             Thread.sleep(timeLeftThisFrame);// sleep for updates/sec-dt
         }
+        leapSensor.StopRecording();
         System.out.println("Stopped recording");
     }
     public static void Update() {

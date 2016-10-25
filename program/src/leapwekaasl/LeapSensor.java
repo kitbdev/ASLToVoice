@@ -26,29 +26,34 @@ public class LeapSensor {
     public void ProcessFrame(Frame frame) {
         if (recording) {
             if (lastFrameID != frame.id()) {
+                // TODO: multiple hands
                 //HandList hands = frame.hands();
-                //what to do with multiple hands?
                 Hand hand = frame.hands().frontmost();
                 if (hand.isValid()) {
                     //LocalDateTime timeNow = LocalDateTime.now();
-                    
                     //hand.direction();
                     // TODO: track by id?
                     //PointableList pointables = frame.pointables();
                     //ToolList tools = frame.tools();
-                    FingerList fingers = hand.fingers();
-                    // TODO: add numbers to records
+                    
+                    // TODO: fix this
+                 //   records.add(frame.id()); // frame number
+                    // min:sec:nano time
+                    LocalDateTime date = LocalDateTime.now();
+                //    records.add(date.getMinute()+":"+date.getSecond()+":"+date.getNano());
+                    
                     // currently arm, hand, and finger pos rot and vel
-//                    Arm arm = hand.arm();
-//                    Vector armPos = arm.elbowPosition();
-//                    records.add(armPos.getX());
-//                    records.add(armPos.getY());
-//                    records.add(armPos.getZ());
-//                    Vector armDir = arm.direction();
-//                    records.add(armDir.getX());
-//                    records.add(armDir.getY());
-//                    records.add(armDir.getZ());
+                    Arm arm = hand.arm();
+                    Vector armPos = arm.elbowPosition();
+                    records.add(armPos.getX());
+                    records.add(armPos.getY());
+                    records.add(armPos.getZ());
+                    Vector armDir = arm.direction();
+                    records.add(armDir.getX());
+                    records.add(armDir.getY());
+                    records.add(armDir.getZ());
                     // no arm vel
+                    
                     // hand
                     Vector handPos = hand.palmPosition();
                     records.add(handPos.getX());
@@ -58,11 +63,13 @@ public class LeapSensor {
                     records.add(handDir.getX());
                     records.add(handDir.getY());
                     records.add(handDir.getZ());
-//                    Vector handVel = hand.palmVelocity();
-//                    records.add(handVel.getX());
-//                    records.add(handVel.getY());
-//                    records.add(handVel.getZ());
+                    Vector handVel = hand.palmVelocity();
+                    records.add(handVel.getX());
+                    records.add(handVel.getY());
+                    records.add(handVel.getZ());
+                    
                     // fingers
+                    FingerList fingers = hand.fingers();
                     for (int i=0; i<5; i++) {
                         Finger f = hand.finger(i);
                         // finger pos relative to hand
@@ -74,10 +81,10 @@ public class LeapSensor {
                         records.add(fDir.getX());
                         records.add(fDir.getY());
                         records.add(fDir.getZ());
-//                        Vector fVel = f.tipVelocity();// TODO: do we even want velocity?
-//                        records.add(fVel.getX());
-//                        records.add(fVel.getY());
-//                        records.add(fVel.getZ());
+                        Vector fVel = f.tipVelocity();
+                        records.add(fVel.getX());
+                        records.add(fVel.getY());
+                        records.add(fVel.getZ());
                     }
                     numFrames++;
                 }
@@ -125,10 +132,11 @@ public class LeapSensor {
         isFileOpen = true;
         StringBuilder sb = new StringBuilder();
         sb.append("id,");
-        //TODO: include frame number ?
         //TODO: see weka api for what to include
         sb.append("time,");
-       // AddPosRotVel(sb, "arm");
+        sb.append("cur_frame,");
+        sb.append("total_frames,");
+        AddPosRot(sb, "arm");
         AddPosRotVel(sb, "hand");
         for (int i=1; i<=5; i++) {
             AddPosRotVel(sb, "finger"+i);
@@ -155,15 +163,12 @@ public class LeapSensor {
         if (numFrames == 0) {
             System.out.println("no data to save!");
         }
-        LocalDateTime date = LocalDateTime.now();
         int dataPerFrame = 9;
         for (int i=0; i<numFrames; i++) {
             //TODO: id, frame num, time
-            sb.append(i);
+            sb.append(i);// id
             sb.append(',');
-            sb.append(date.getMinute());// get min:sec:nano
-            sb.append(date.getSecond());
-            sb.append(date.getNano());
+            sb.append(numFrames);// total frames
             sb.append(',');
             for (int j=0; j<dataPerFrame; j++) {
                 sb.append(records.get(i*dataPerFrame+j).toString());
@@ -180,7 +185,7 @@ public class LeapSensor {
     public void LoadRecording(){
         
     }
-    void AddPosRotVel(StringBuilder sb, String name) {
+    void AddPosRot(StringBuilder sb, String name) {
         sb.append(name);
         sb.append("_pos_x,");
         sb.append(name);
@@ -193,11 +198,14 @@ public class LeapSensor {
         sb.append("_roll,");
         sb.append(name);
         sb.append("_pitch,");
-//        sb.append(name);
-//        sb.append("_vel_x,");
-//        sb.append(name);
-//        sb.append("_vel_y,");
-//        sb.append(name);
-//        sb.append("_vel_z,");
+    }
+    void AddPosRotVel(StringBuilder sb, String name) {
+        AddPosRot(sb, name);
+        sb.append(name);
+        sb.append("_vel_x,");
+        sb.append(name);
+        sb.append("_vel_y,");
+        sb.append(name);
+        sb.append("_vel_z,");
     }
 }
