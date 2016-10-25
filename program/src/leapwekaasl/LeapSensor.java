@@ -91,7 +91,7 @@ public class LeapSensor {
         lastFrameID = 0;
         ClearRecording();
         if (isFileOpen && signLabel=="") {
-            // use the last sign
+            // use the last sign 
         } else {
             sign = signLabel;
         }

@@ -22,6 +22,8 @@ public class LeapWekaASLTest {
     public static Controller controller = new Controller();
     public static LeapSensor leapSensor = new LeapSensor();
     
+    public static long POLLRATE = 1/100;// 1 poll every .1 seconds in ms
+        
     public static void main(String[] args) 
                 throws InterruptedException, IOException {
         if(controller.isConnected()) {
@@ -47,6 +49,9 @@ public class LeapWekaASLTest {
         
         //boolean canRecordTrainingData;
         
+        int framesToRecord = 0;
+        
+        
         while (running) {
             connected = controller.isConnected();
             // prompts
@@ -61,6 +66,10 @@ public class LeapWekaASLTest {
                 } else {
                     System.out.print("[n] Start Recording with new label, ");
                     System.out.print("[r] Start Recording with same label, ");
+                    System.out.print("[f] Record for n frames, ");
+                    System.out.print("[n] Record for n seconds, ");
+                    System.out.print("[i] Record untill keypress, ");
+                    //System.out.print("[f] Start Recording for n fr, ");
                     hasRecording = leapSensor.HasData();
                     if (hasRecording) {
                         System.out.print("[s] Save Recording, ");
@@ -109,7 +118,7 @@ public class LeapWekaASLTest {
                 }
                 if (s == 'n') {
                     try {
-                        Record("");
+                        Record("",framesToRecord);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -125,10 +134,21 @@ public class LeapWekaASLTest {
                         signName = scanner.next();
                     }
                     try {
-                        Record(signName);
+                        Record(signName,framesToRecord);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+                }
+                if (s == 'i') {
+                    framesToRecord = 0;
+                }
+                if (s == 'f' || s == 'n') {
+                    int n=0;
+                    if (s == 'n') {
+
+                    }
+                    framesToRecord = n;
+                
                 }
                 if (hasRecording) {
                     if (s == 's') {
@@ -152,15 +172,15 @@ public class LeapWekaASLTest {
             }
         }
     }
-    public static void Record(String sign) throws IOException, InterruptedException {
+    public static void Record(String sign, int nframes) throws IOException, InterruptedException {
         // pass in "" to record non-labelled
         System.out.println("Press Enter to stop recording");
         leapSensor.ClearRecording();
         leapSensor.StartRecording(sign); // replace with some sign
-        
+        // TODO: recording mode (n frames, n sec, until press, until detected stop)
         long timeSinceStart = System.currentTimeMillis();
         //long dt = 0, frameStart = 0;
-        long pollRate = 1/100;// 1 poll every .1 seconds
+        
         // only loop when looking for data
         System.out.println("Recording");
         boolean exit = false;
@@ -173,7 +193,7 @@ public class LeapWekaASLTest {
             }
             Update();
             long dt = System.currentTimeMillis() - frameStart; // time that this update took
-            long timeLeftThisFrame = pollRate - dt;
+            long timeLeftThisFrame = POLLRATE - dt;
             Thread.sleep(timeLeftThisFrame);// sleep for updates/sec-dt
         }
         System.out.println("Stopped recording");
