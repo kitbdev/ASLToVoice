@@ -6,7 +6,7 @@ import com.leapmotion.leap.*;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 import weka.classifiers.trees.J48;
-//import weka.classifiers.
+import weka.classifiers.Classifier;
 
 //import java.io.BufferedReader;
 //import java.io.BufferedWriter;
@@ -22,8 +22,10 @@ public class LeapWekaASLTest {
     public static Controller controller = new Controller();
     public static LeapSensor leapSensor = new LeapSensor();
     
-    public static long POLLRATE = 1/100;// 1 poll every .1 seconds in ms
+    public static long POLLRATE = 100;//1.0/100.0;// 1 poll every .1 seconds in ms
         
+    public static Classifier classifier;
+    
     public static void main(String[] args) 
                 throws InterruptedException, IOException {
         if(controller.isConnected()) {
@@ -31,6 +33,7 @@ public class LeapWekaASLTest {
         } else {
             System.out.println("No controller connected!");
         }
+        classifier = new J48();
         try {
             Menu();
         } catch (Exception e) {
@@ -40,7 +43,7 @@ public class LeapWekaASLTest {
     }
     public static void Menu() throws IOException, Exception {
         boolean running = true;
-        boolean connected, hasRecording = false;
+        boolean isConnected, hasRecording = false;
         
         String trainingDataLoc = null;
         Instances trainingData;
@@ -50,17 +53,25 @@ public class LeapWekaASLTest {
         int framesToRecord = 0;
         
         while (running) {
-            connected = controller.isConnected();
+            isConnected = controller.isConnected();
+            System.out.print("\n");//Classifier: ? ");
+            if (framesToRecord >= 0 ) {
+                System.out.print("Will Record for: "+framesToRecord + " frames, or "
+                         + (float)framesToRecord/POLLRATE+" seconds.");
+            } else {
+                System.out.print("Recording until keypress.");
+            }
+            System.out.print("\n");
             // prompts
             System.out.print("\nPress a key and enter to make a selection:\n");
-            if (connected) {
+            
                 if (!isRecordingTrainingData) {
-                    System.out.print("[t] Record new training data, ");
+                    if (isConnected) System.out.print("[t] Record new training data, ");
                     System.out.print("[l] Load training data, ");
                     System.out.print("[c] Change classifier, ");
                     System.out.print("[d] Train on data, ");
-                    System.out.print("[n] Record data to classify, ");
-                } else {
+                    if (isConnected) System.out.print("[n] Record data to classify, ");
+                } else if (isConnected) {
                     System.out.print("[n] Start Recording with new label, ");
                     System.out.print("[r] Start Recording with same label, ");
                     System.out.print("[f] Record for n frames, ");
@@ -73,8 +84,11 @@ public class LeapWekaASLTest {
                         System.out.print("[c] Clear Recording, ");
                     }
                     System.out.print("[t] Stop Recording training data, ");
+                } else {
+                   isRecordingTrainingData = false; 
                 }
-            }
+                    
+            
             System.out.print("or [E]xit:\n");
 
             // get input
@@ -90,13 +104,14 @@ public class LeapWekaASLTest {
                     
                 }
                 if (s == 'c') {
-                    System.out.println("Current Classifier is: ");
+                    System.out.println("Current Classifier is: " + classifier.toString());
                     
                 }
                 if (s == 'd') {
                     System.out.println("Training data on recorded training data");
                     System.out.println("Using (classifier)");
                     
+                    // TODO: move this to load training data with 
                     // get training data
                     DataSource src = new DataSource(trainingDataLoc);
                     trainingData = src.getDataSet();
