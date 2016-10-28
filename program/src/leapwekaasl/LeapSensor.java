@@ -1,4 +1,3 @@
-
 package leapwekaasl;
 
 import com.leapmotion.leap.*;
@@ -10,21 +9,25 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ArrayList;
+
 /**
  * This class will process the frame and output to a file
+ *
  * @author Ian
  */
 public class LeapSensor {
+
     public long lastFrameID = 0;
     boolean recording = false;
     List<Float> records = new ArrayList<>();
+    List<String> timeRecords = new ArrayList<>();
     int numFrames = 0;
     String sign = "";
     String savePath = "";
     PrintWriter openFile;
     boolean isFileOpen = false;
     private int rid;
-    
+
     public void ProcessFrame(Frame frame) {
         if (recording) {
             if (lastFrameID != frame.id()) {
@@ -32,23 +35,16 @@ public class LeapSensor {
                 //HandList hands = frame.hands();
                 Hand hand = frame.hands().frontmost();
                 if (hand.isValid()) {
-                    //LocalDateTime timeNow = LocalDateTime.now();
-                    //hand.direction();
-                    // TODO: track by id?
                     //PointableList pointables = frame.pointables();
                     //ToolList tools = frame.tools();
-                    
-                    // TODO: fix this
-                 //   records.add(frame.id()); // frame number
-                    //records.add(numFrames);                    // min:sec:nano time
-                    LocalDateTime date = LocalDateTime.now();
-                //    records.add(date.getMinute()+":"+date.getSecond()+":"+date.getNano());
-                    
+                    LocalDateTime timeNow = LocalDateTime.now();
+                    timeRecords.add(timeNow.getMinute()+":"+timeNow.getSecond()+":"+timeNow.getNano());
+                    // min:sec:nano time
                     // currently arm, hand, and finger pos rot and vel
                     Arm arm = hand.arm();
                     if (!arm.isValid()) {
                         // uh oh
-                        
+                        System.out.println("ERROR: NO ARM DETECTED");
                     }
                     Vector armPos = arm.elbowPosition();
                     records.add(armPos.getX());
@@ -59,7 +55,7 @@ public class LeapSensor {
                     records.add(armDir.getY());
                     records.add(armDir.getZ());
                     // no arm velocity
-                    
+
                     // hand
                     Vector handPos = hand.palmPosition();
                     records.add(handPos.getX());
@@ -73,10 +69,10 @@ public class LeapSensor {
                     records.add(handVel.getX());
                     records.add(handVel.getY());
                     records.add(handVel.getZ());
-                    
+
                     // fingers
                     FingerList fingers = hand.fingers();
-                    for (int i=0; i<5; i++) {
+                    for (int i = 0; i < 5; i++) {
                         Finger f = hand.finger(i);
                         // finger pos relative to hand
                         Vector fPos = f.tipPosition().minus(handPos);
@@ -94,12 +90,13 @@ public class LeapSensor {
                     }
                     numFrames++;
                 }
-            } 
+            }
         }
         lastFrameID = frame.id();
     }
+
     // start recording with the leap
-    public void StartRecording(String signLabel){
+    public void StartRecording(String signLabel) {
         if (!isFileOpen) {
             System.out.println("start a file first!");
             return;
@@ -107,28 +104,33 @@ public class LeapSensor {
         recording = true;
         lastFrameID = 0;
         ClearRecording();
-        if (signLabel=="") {
+        if (signLabel == "") {
             // use the last sign 
         } else {
             sign = signLabel;
         }
-        rid+=1;
+        rid += 1;
     }
+
     // stop recording
-    public void StopRecording(){
+    public void StopRecording() {
         recording = false;
-        System.out.println(numFrames+" frames recorded.");
+        System.out.println(numFrames + " frames recorded.");
     }
+
     // clear the data we recorded
-    public void ClearRecording(){
+    public void ClearRecording() {
         records.clear();
+        timeRecords.clear();
         numFrames = 0;
         sign = "";
-        rid-=1;
+        rid -= 1;
     }
+
     public boolean HasData() {
         return !records.isEmpty();
     }
+
     public void StartDataFile(boolean isTrainingData) throws FileNotFoundException {
         LocalDateTime date = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("kkmmss_ddMMyy");//hourminutesecond_daymonthyear
@@ -137,10 +139,10 @@ public class LeapSensor {
         if (isTrainingData) {
             fname += "td_";
         }
-        fname += text+".csv";
+        fname += text + ".csv";
         savePath = fname;
-        rid=0;
-        System.out.println("New file is "+fname+"");
+        rid = 0;
+        System.out.println("New file is " + fname + "");
         openFile = new PrintWriter(new File(fname));
         isFileOpen = true;
         StringBuilder sb = new StringBuilder();
@@ -151,22 +153,24 @@ public class LeapSensor {
         sb.append("total_frames,");
         AddPosRot(sb, "arm");
         AddPosRotVel(sb, "hand");
-        for (int i=1; i<=5; i++) {
-            AddPosRotVel(sb, "finger"+i);
+        for (int i = 1; i <= 5; i++) {
+            AddPosRotVel(sb, "finger" + i);
         }
         if (isTrainingData) {
             sb.append("sign");
         }
         sb.append('\n');
         openFile.write(sb.toString());
-    } 
+    }
+
     public void FinishDataFile() {
         openFile.close();
         isFileOpen = false;
         //System.out.println("Finished file!");
     }
+
     // save all recorded data
-    public void SaveRecording() { 
+    public void SaveRecording() {
         if (!isFileOpen) {
             System.out.println("File not open!");
             return;
@@ -178,30 +182,32 @@ public class LeapSensor {
             return;
         }
         int dataPerFrame = records.size() / numFrames;
-        for (int i=0; i<numFrames; i++) {
-            sb.append(rid*numFrames+i);// id
+        for (int i = 0; i < numFrames; i++) {
+            sb.append(rid * numFrames + i);// id
             sb.append(',');
-            sb.append("time");// time
+            sb.append(timeRecords.get(i));// time
             sb.append(',');
             sb.append(i);// current frame
             sb.append(',');
             sb.append(numFrames);// total frames of this sign
             sb.append(',');
-            for (int j=0; j<dataPerFrame; j++) {
-                sb.append(records.get(i*dataPerFrame+j).toString());
+            for (int j = 0; j < dataPerFrame; j++) {
+                sb.append(records.get(i * dataPerFrame + j).toString());
                 sb.append(',');
             }
-            if (sign != ""){
+            if (sign != "") {
                 sb.append(sign);
             }
             sb.append('\n');
         }
         openFile.write(sb.toString());
-        System.out.println("Saved!"+sign);
+        System.out.println("Saved!" + sign);
     }
-    public void LoadRecording(){
-        
+
+    public void LoadRecording() {
+
     }
+
     void AddPosRot(StringBuilder sb, String name) {
         sb.append(name);
         sb.append("_pos_x,");
@@ -216,6 +222,7 @@ public class LeapSensor {
         sb.append(name);
         sb.append("_pitch,");
     }
+
     void AddPosRotVel(StringBuilder sb, String name) {
         AddPosRot(sb, name);
         sb.append(name);
