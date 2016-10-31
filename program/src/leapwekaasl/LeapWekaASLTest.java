@@ -46,9 +46,9 @@ public class LeapWekaASLTest {
         boolean isConnected, hasRecording = false;
 
         String trainingDataLoc = null;
-        Instances trainingData;
+        Instances trainingData = null;
 
-        boolean isRecordingTrainingData = false;
+        boolean isRecordingTrainingData = false, hasModel = false;
 
         int framesToRecord = 0;
 
@@ -73,17 +73,27 @@ public class LeapWekaASLTest {
             if (!isRecordingTrainingData) {
                 if (isConnected) {
                     System.out.print("[t] Record new training data, ");
-                    System.out.print("[n] Record data to classify, ");
+                    if (hasModel) {
+                        System.out.print("[n] Record data to classify, ");
+                    }
                 }
-                System.out.print("[l] Load training data, ");
-                System.out.print("[c] Change classifier, ");
-                System.out.print("[d] Train on data, ");
+                System.out.print("[m] Load Model, ");
+                System.out.print("[d] Load training data, ");
+                System.out.print("[c] Change classifier type, ");
+                if (!trainingData.isEmpty()) {
+                    System.out.print("[y] Train classifier on data, ");
+                }
+                if (hasModel) {
+                    // TODO: save model
+                }
+                System.out.print("\n");
             } else if (isConnected) {
                 System.out.print("[n] Start Recording with new label, ");
                 System.out.print("[r] Start Recording with same label, ");
                 System.out.print("[f] Record for n frames, ");
                 System.out.print("[n] Record for n seconds, ");
                 System.out.print("[i] Record untill keypress, ");
+                System.out.print("[q] Start Recording Sequence of classes, ");
                 hasRecording = leapSensor.HasData();
                 if (hasRecording) {
                     System.out.print("[s] Save Recording, ");
@@ -105,42 +115,64 @@ public class LeapWekaASLTest {
                     if (s == 't') {
                         isRecordingTrainingData = true;
                         leapSensor.StartDataFile(true);
-                    } else if (s == 'n') {
+                    } else if (s == 'n' && hasModel) {
                         try {
                             Record("", framesToRecord);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
                         // TODO: weka stuff
+                        System.out.println("ERROR NOT IMPLEMENTED");
                         System.out.println("The sign you signed is ");
                     }
                 }
-                if (s == 'l') {
-
-                }
-                if (s == 'c') {
-                    System.out.println("Current Classifier is: " + classifier.toString());
-
-                }
-                if (s == 'd') {
-                    System.out.println("Training data on recorded training data");
-                    System.out.println("Using (classifier)");
-
-                    // TODO: move this to load training data with custom location
-                    // get training data
-                    DataSource src = new DataSource(trainingDataLoc);
+                if (s == 'm') { 
+                    System.out.println("Where is the file located?");
+                    String fileLoc = scanner.next();
+                    // TODO: shortcut for ../savedata/models
+                    
+                    // load model
+                    //classifier = 
+                    hasModel = true;
+                } else if (s == 'd') {
+                    System.out.println("Where is the file located? (leave blank to use last location)");
+                    String fileLoc = scanner.next();
+                    // TODO: shortcut for ../savedata/td
+                    if (fileLoc == "") {
+                        if (trainingDataLoc == "") {
+                            fileLoc = trainingDataLoc;
+                        }
+                    }
+                    // load training data
+                    DataSource src = new DataSource(fileLoc);
                     trainingData = src.getDataSet();
                     // set class index because this is not an ARFF
                     if (trainingData.classIndex() == -1) {
                         trainingData.setClassIndex(trainingData.numAttributes() - 1);
                     }
-                    // remove id and time
+                    // remove id, time, cur and total frames
+                    trainingData.deleteAttributeAt(3);
+                    trainingData.deleteAttributeAt(2);
                     trainingData.deleteAttributeAt(1);
                     trainingData.deleteAttributeAt(0);
+                    // TODO: any other preprocessing?
+                }
+                if (s == 'c') {
+                    System.out.println("Current Classifier is: " + classifier.toString());
 
-                    // TODO: train data with classifier
+                }
+                if (s == 'y') {
+                    System.out.println("Training data on recorded training data with "+ classifier.toString()+"...");
+                    
+                    classifier.buildClassifier(trainingData);
+                    // classifier.getCapabilities() instead of
+                    hasModel = true;
+                    //classifier.classifyInstance(instnc)
+                    // TODO: cross-validation?
+                    // TODO: split by recording?
                     // TODO: check file to make sure there is enough data?
-                    // TODO: testing data needed to find accuracy ?
+                    // TODO: testing data to find accuracy ?
+                    System.out.println("Finished training model!");
                 }
             } else {
                 if (s == 'r' || s == 'n') {
@@ -153,6 +185,23 @@ public class LeapWekaASLTest {
                         Record(signName, framesToRecord);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
+                    }
+                }
+                if (s == 'q') {
+                    System.out.println("Enter the number of signs you will record: ");
+                    int numSigns = scanner.nextInt();
+                    String signNames[];// len of numSigns
+                    for (int i=0; i<numSigns; i++) {
+                        System.out.println("Enter the sign names one a time: ");
+                        signNames[0] = scanner.next();
+                    }
+                    // TODO: Continue
+                    for (int i=0; i<numSigns; i++) {
+                        try {
+                            Record(signName, framesToRecord);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
                 if (s == 'i') {

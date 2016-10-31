@@ -20,7 +20,8 @@ public class LeapSensor {
     public long lastFrameID = 0;
     boolean recording = false;
     List<Float> records = new ArrayList<>();
-    List<String> timeRecords = new ArrayList<>();
+    long recordStartTimeN = 0;
+    List<Long> timeRecords = new ArrayList<>();
     int numFrames = 0;
     String sign = "";
     String savePath = "";
@@ -37,9 +38,9 @@ public class LeapSensor {
                 if (hand.isValid()) {
                     //PointableList pointables = frame.pointables();
                     //ToolList tools = frame.tools();
-                    LocalDateTime timeNow = LocalDateTime.now();
-                    timeRecords.add(timeNow.getMinute()+":"+timeNow.getSecond()+":"+timeNow.getNano());
-                    // min:sec:nano time
+                    // add time since start frame
+                    long dNano = System.nanoTime() - recordStartTimeN;
+                    timeRecords.add(dNano);
                     // currently arm, hand, and finger pos rot and vel
                     Arm arm = hand.arm();
                     if (!arm.isValid()) {
@@ -110,6 +111,7 @@ public class LeapSensor {
             sign = signLabel;
         }
         rid += 1;
+        recordStartTimeN = System.nanoTime();
     }
 
     // stop recording
@@ -135,10 +137,11 @@ public class LeapSensor {
         LocalDateTime date = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("kkmmss_ddMMyy");//hourminutesecond_daymonthyear
         String text = date.format(formatter);
-        String fname = "..\\savedata\\";
+        String fname = "..\\savedata\\trainingdata\\";
         if (isTrainingData) {
             fname += "td_";
         }
+        // TODO: add types of classes to path?
         fname += text + ".csv";
         savePath = fname;
         rid = 0;
@@ -150,6 +153,7 @@ public class LeapSensor {
         //TODO: see weka api for what to include
         sb.append("time,");
         sb.append("cur_frame,");
+        // TODO: relative time? time since last frame
         sb.append("total_frames,");
         AddPosRot(sb, "arm");
         AddPosRotVel(sb, "hand");
@@ -185,7 +189,7 @@ public class LeapSensor {
         for (int i = 0; i < numFrames; i++) {
             sb.append(rid * numFrames + i);// id
             sb.append(',');
-            sb.append(timeRecords.get(i));// time
+            sb.append(timeRecords.get(i));// time since start of recording
             sb.append(',');
             sb.append(i);// current frame
             sb.append(',');
