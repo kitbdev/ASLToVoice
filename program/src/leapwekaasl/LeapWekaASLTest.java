@@ -190,19 +190,30 @@ public class LeapWekaASLTest {
                 if (s == 'q') {
                     System.out.println("Enter the number of signs you will record: ");
                     int numSigns = scanner.nextInt();
-                    String signNames[];// len of numSigns
+                    String signNames[] = new String[numSigns];
+                    System.out.println("Enter the sign names one a time: ");
                     for (int i=0; i<numSigns; i++) {
-                        System.out.println("Enter the sign names one a time: ");
-                        signNames[0] = scanner.next();
+                        System.out.print("\nSign "+(i+1)+": ");
+                        signNames[i] = scanner.next();
                     }
-                    // TODO: Continue
                     for (int i=0; i<numSigns; i++) {
+                        System.out.println("Sign "+signNames[i]+" in ");
+                        System.out.println("3...");
+                        Thread.sleep(1000);
+                        System.out.println("2...");
+                        Thread.sleep(1000);
+                        System.out.println("1...");
+                        Thread.sleep(1000);
+                        System.out.println("Record!");
                         try {
-                            Record(signName, framesToRecord);
+                            Record(signNames[i], framesToRecord);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
+                        // TODO: give chance to retry
+                        leapSensor.SaveRecording();
                     }
+                    System.out.println("All signs recorded");
                 }
                 if (s == 'i') {
                     framesToRecord = 0;
@@ -259,7 +270,6 @@ public class LeapWekaASLTest {
         long timeSinceStart = System.currentTimeMillis();
         //long dt = 0, frameStart = 0;
 
-        // loop while recording
         System.out.println("Recording");
         int framesLeft = nframes + 1;
         boolean exit = false;
