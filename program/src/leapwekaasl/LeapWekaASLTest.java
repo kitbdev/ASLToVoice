@@ -27,11 +27,6 @@ public class LeapWekaASLTest {
 
     public static void main(String[] args)
             throws InterruptedException, IOException {
-        if (controller.isConnected()) {
-            System.out.println("Controller connected!");
-        } else {
-            System.out.println("No controller connected!");
-        }
         classifier = new J48();
         try {
             Menu();
@@ -55,17 +50,24 @@ public class LeapWekaASLTest {
         while (running) {
             isConnected = controller.isConnected();
             //System.out.println("Current Classifier: "+classifier.);
+            System.out.print("\n");
             if (isConnected) {
-                System.out.print("\n");
-                if (framesToRecord >= 0) {
-                    System.out.print("Will Record for: " + framesToRecord + " frames, or "
-                            + (float) framesToRecord / POLLRATE + " seconds.");
-                } else {
-                    System.out.print("Recording until keypress.");
+                System.out.println("CONNECTED");
+                if (isRecordingTrainingData) {
+                    if (framesToRecord > 0) {
+                        System.out.print("Will Record for: " + framesToRecord + " frames, or "
+                                + (float) framesToRecord / POLLRATE + " seconds.");
+                    } else {
+                        System.out.println("Recording until keypress.");
+                    }
+                    if (leapSensor.HasData()) {
+                        System.out.print("Usaved data recorded, please clear or save.");
+                    }
+                    System.out.print("\n");
                 }
-                System.out.print("\n");
             } else {
                 System.out.println("Connect to a LEAP motion sensor for more options");
+                System.out.println("DISCONNECTED");
             }
             // prompts
             System.out.print("\nPress a key and enter to make a selection:\n");
@@ -80,31 +82,32 @@ public class LeapWekaASLTest {
                 System.out.print("[m] Load Model, ");
                 System.out.print("[d] Load training data, ");
                 System.out.print("[c] Change classifier type, ");
-                if (!trainingData.isEmpty()) {
-                    System.out.print("[y] Train classifier on data, ");
-                }
-                if (hasModel) {
+               // if (!trainingData.isEmpty()) {
+               //     System.out.print("[y] Train classifier on data, ");
+               // }
+               // if (hasModel) {
                     // TODO: save model
-                }
+               // }
                 System.out.print("\n");
             } else if (isConnected) {
                 System.out.print("[n] Start Recording with new label, ");
                 System.out.print("[r] Start Recording with same label, ");
-                System.out.print("[f] Record for n frames, ");
-                System.out.print("[n] Record for n seconds, ");
-                System.out.print("[i] Record untill keypress, ");
-                System.out.print("[q] Start Recording Sequence of classes, ");
+                System.out.print("[q] Start Recording Sequence of classes, \n");
+                System.out.print("[f] Set to record n frames, ");
+                System.out.print("[o] Set to record n seconds, ");
+                System.out.print("[i] Set to record until keypress, ");
                 hasRecording = leapSensor.HasData();
                 if (hasRecording) {
-                    System.out.print("[s] Save Recording, ");
-                    System.out.print("[c] Clear Recording, ");
+                    System.out.print("\n[s] Save Current Recording, ");
+                    System.out.print("[c] Clear Current Recording, ");
                 }
-                System.out.print("[t] Stop Recording training data, ");
+                System.out.print("\n[t] Stop Recording training data, ");
+                // TODO: delete file if empty (and better names)
             } else {
                 isRecordingTrainingData = false;
             }
 
-            System.out.print("or [E]xit:\n");
+            System.out.print("or [e] Exit:\n");
 
             // get input
             String sIn = scanner.next();
@@ -181,11 +184,7 @@ public class LeapWekaASLTest {
                         System.out.println("Enter the sign name: ");
                         signName = scanner.next();
                     }
-                    try {
-                        Record(signName, framesToRecord);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    RecordIn(signName, framesToRecord, 3);
                 }
                 if (s == 'q') {
                     System.out.println("Enter the number of signs you will record: ");
@@ -197,21 +196,17 @@ public class LeapWekaASLTest {
                         signNames[i] = scanner.next();
                     }
                     for (int i=0; i<numSigns; i++) {
-                        System.out.println("Sign "+signNames[i]+" in ");
-                        System.out.println("3...");
-                        Thread.sleep(1000);
-                        System.out.println("2...");
-                        Thread.sleep(1000);
-                        System.out.println("1...");
-                        Thread.sleep(1000);
-                        System.out.println("Record!");
-                        try {
-                            Record(signNames[i], framesToRecord);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
+                        
+                        RecordIn(signNames[i], framesToRecord, 3);
+                        
                         // TODO: give chance to retry
-                        leapSensor.SaveRecording();
+                        if (false) {
+                            // redo
+                            leapSensor.ClearRecording();
+                            i--;
+                        } else {
+                            leapSensor.SaveRecording();
+                        }
                     }
                     System.out.println("All signs recorded");
                 }
@@ -219,17 +214,20 @@ public class LeapWekaASLTest {
                     framesToRecord = 0;
                     System.out.println("Will record until a key is pressed.");
                 }
-                if (s == 'f' || s == 'n') {
+                if (s == 'f' || s == 'o') {
                     System.out.print("\nEnter the number of ");
-                    if (s == 'n') {
+                    if (s == 'o') {
                         System.out.print("seconds");
                     } else {
                         System.out.print("frames");
                     }
                     System.out.print(" to record for: ");
-                    int n = scanner.nextInt();
-                    if (s == 'n') {
-                        n *= POLLRATE;
+                    int n;
+                    if (s == 'o') {
+                        float m = scanner.nextFloat();
+                        n = (int)Math.floor(m*POLLRATE);
+                    } else {
+                        n = scanner.nextInt();
                     }
                     framesToRecord = n;
                     System.out.println("Will record for " + framesToRecord + " frames.");
@@ -255,8 +253,30 @@ public class LeapWekaASLTest {
                 running = false;
             }
         }
+        // TODO: wait a little?
     }
-
+    public static void RecordIn(String sign, int nframes, int delay) {
+        if (leapSensor.HasData()) {
+            leapSensor.SaveRecording();
+        }
+        System.out.println("Sign "+sign);
+        if (delay>1){
+            for(int i=0; i<delay; i++) {
+                System.out.println(i+"...");
+                try {
+                    Thread.sleep(1000);
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        }
+        //System.out.println("Record!");
+        try {
+            Record(sign, nframes);
+        } catch (InterruptedException | IOException e) {
+            e.printStackTrace();
+        }
+    }
     public static void Record(String sign, int nframes) throws IOException, InterruptedException {
         // pass in "" to record non-labelled
         if (nframes == 0) {
@@ -270,7 +290,7 @@ public class LeapWekaASLTest {
         long timeSinceStart = System.currentTimeMillis();
         //long dt = 0, frameStart = 0;
 
-        System.out.println("Recording");
+        System.out.println("Recording "+sign);
         int framesLeft = nframes + 1;
         boolean exit = false;
         while (!exit) {

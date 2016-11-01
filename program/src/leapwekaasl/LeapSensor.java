@@ -94,6 +94,7 @@ public class LeapSensor {
             }
         }
         lastFrameID = frame.id();
+        System.out.println("f"+numFrames);
     }
 
     // start recording with the leap
@@ -206,10 +207,7 @@ public class LeapSensor {
         }
         openFile.write(sb.toString());
         System.out.println("Saved!" + sign);
-    }
-
-    public void LoadRecording() {
-
+        ClearRecording();
     }
 
     void AddPosRot(StringBuilder sb, String name) {
