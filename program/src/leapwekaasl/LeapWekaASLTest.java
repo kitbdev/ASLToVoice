@@ -307,7 +307,13 @@ public class LeapWekaASLTest {
                     break;
                 }
             }
-            Update();
+            boolean gotFrame = Update();
+            if (!gotFrame) {
+                framesLeft++;
+                System.out.println("Hand not detected! No data recorded.");
+            } else {
+                System.out.print(framesLeft+", ");
+            }
             long dt = System.currentTimeMillis() - frameStart; // time that this update took
             long timeLeftThisFrame = POLLRATE - dt;
             Thread.sleep(timeLeftThisFrame);// sleep for updates/sec-dt
@@ -316,8 +322,8 @@ public class LeapWekaASLTest {
         System.out.println("Stopped recording");
     }
 
-    public static void Update() {
+    public static boolean Update() {
         Frame frame = controller.frame();
-        leapSensor.ProcessFrame(frame);
+        return leapSensor.ProcessFrame(frame);
     }
 }

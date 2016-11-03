@@ -27,9 +27,9 @@ public class LeapSensor {
     String savePath = "";
     PrintWriter openFile;
     boolean isFileOpen = false;
-    private int rid;
+    private int rid, totalId=0;
 
-    public void ProcessFrame(Frame frame) {
+    public boolean ProcessFrame(Frame frame) {
         if (recording) {
             if (lastFrameID != frame.id()) {
                 // TODO: multiple hands
@@ -74,13 +74,16 @@ public class LeapSensor {
                     // fingers
                     FingerList fingers = hand.fingers();
                     for (int i = 0; i < 5; i++) {
-                        Finger f = hand.finger(i);
+                        Finger f = fingers.get(i);
                         // finger pos relative to hand
                         Vector fPos = f.tipPosition().minus(handPos);
                         records.add(fPos.getX());
                         records.add(fPos.getY());
                         records.add(fPos.getZ());
                         Vector fDir = f.direction();
+                        if (fDir.getX() == 0.0f){
+                            System.out.println("fdir is zero!");
+                        }
                         records.add(fDir.getX());
                         records.add(fDir.getY());
                         records.add(fDir.getZ());
@@ -94,7 +97,12 @@ public class LeapSensor {
             }
         }
         lastFrameID = frame.id();
-        System.out.println("f"+numFrames);
+        //System.out.println("f"+numFrames);
+        if (numFrames==0) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     // start recording with the leap
@@ -146,6 +154,7 @@ public class LeapSensor {
         fname += text + ".csv";
         savePath = fname;
         rid = 0;
+        totalId = 0;
         System.out.println("New file is " + fname + "");
         openFile = new PrintWriter(new File(fname));
         isFileOpen = true;
@@ -171,6 +180,7 @@ public class LeapSensor {
     public void FinishDataFile() {
         openFile.close();
         isFileOpen = false;
+        totalId = 0;
         //System.out.println("Finished file!");
     }
 
@@ -188,7 +198,7 @@ public class LeapSensor {
         }
         int dataPerFrame = records.size() / numFrames;
         for (int i = 0; i < numFrames; i++) {
-            sb.append(rid * numFrames + i);// id
+            sb.append(totalId++);// id //rid * numFrames + i + numFrames
             sb.append(',');
             sb.append(timeRecords.get(i));// time since start of recording
             sb.append(',');
