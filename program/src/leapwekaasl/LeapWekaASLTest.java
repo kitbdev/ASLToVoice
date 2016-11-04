@@ -185,6 +185,7 @@ public class LeapWekaASLTest {
                         signName = scanner.next();
                     }
                     RecordIn(signName, framesToRecord, 3);
+                    leapSensor.SaveRecording();
                 }
                 if (s == 'q') {
                     System.out.println("Enter the number of signs you will record: ");
@@ -262,7 +263,7 @@ public class LeapWekaASLTest {
         System.out.println("Sign "+sign);
         if (delay>1){
             for(int i=0; i<delay; i++) {
-                System.out.println(i+"...");
+                System.out.println((delay-i)+"...");
                 try {
                     Thread.sleep(1000);
                 } catch (Exception e){
@@ -312,7 +313,7 @@ public class LeapWekaASLTest {
                 framesLeft++;
                 System.out.println("Hand not detected! No data recorded.");
             } else {
-                System.out.print(framesLeft+", ");
+                //System.out.print(framesLeft+", \n");
             }
             long dt = System.currentTimeMillis() - frameStart; // time that this update took
             long timeLeftThisFrame = POLLRATE - dt;

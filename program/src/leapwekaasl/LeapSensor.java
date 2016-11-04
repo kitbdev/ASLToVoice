@@ -181,7 +181,7 @@ public class LeapSensor {
         openFile.close();
         isFileOpen = false;
         totalId = 0;
-        //System.out.println("Finished file!");
+        System.out.println("Finished file "+savePath);
     }
 
     // save all recorded data
@@ -216,7 +216,7 @@ public class LeapSensor {
             sb.append('\n');
         }
         openFile.write(sb.toString());
-        System.out.println("Saved!" + sign);
+        System.out.println("Saved " + sign);
         ClearRecording();
     }
 
