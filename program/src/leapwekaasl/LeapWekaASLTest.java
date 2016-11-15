@@ -6,6 +6,9 @@ import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 import weka.classifiers.trees.J48;
 import weka.classifiers.Classifier;
+import weka.classifiers.lazy.IBk;
+import weka.classifiers.Evaluation;
+import weka.core.DenseInstance;
 
 //import java.io.BufferedReader;
 //import java.io.BufferedWriter;
@@ -27,7 +30,8 @@ public class LeapWekaASLTest {
 
     public static void main(String[] args)
             throws InterruptedException, IOException {
-        classifier = new J48();
+        //classifier = new J48();
+        classifier = new IBk();
         try {
             Menu();
         } catch (Exception e) {
@@ -49,8 +53,8 @@ public class LeapWekaASLTest {
 
         while (running) {
             isConnected = controller.isConnected();
-            //System.out.println("Current Classifier: "+classifier.);
             System.out.print("\n");
+            System.out.println("Classifier: " + classifier.toString());
             if (isConnected) {
                 System.out.println("CONNECTED");
                 if (isRecordingTrainingData) {
@@ -79,11 +83,11 @@ public class LeapWekaASLTest {
                         System.out.print("[n] Record data to classify, ");
                     }
                 }
-                System.out.print("[m] Load Model, ");
+               // System.out.print("[m] Load Model, ");
                 System.out.print("[d] Load training data, ");
                 System.out.print("[c] Change classifier type, ");
                // if (!trainingData.isEmpty()) {
-               //     System.out.print("[y] Train classifier on data, ");
+                System.out.print("[y] Train classifier on data, ");
                // }
                // if (hasModel) {
                     // TODO: save model
@@ -118,64 +122,82 @@ public class LeapWekaASLTest {
                     if (s == 't') {
                         isRecordingTrainingData = true;
                         leapSensor.StartDataFile(true);
-                    } else if (s == 'n' && hasModel) {
-                        try {
-                            Record("", framesToRecord);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
+                    } else if (s == 'n') {
+                        if (hasModel) {
+                            try {
+                                Record("", framesToRecord);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            // TODO: weka stuff
+                            System.out.println("analysing recorded data...");
+                            //DenseInstance di = new DenseInstance(trainingData.numAttributes());
+                            //get new values into array
+                            //di.setValue(indx, arr[indx]);
+
+                            //di.setDataset(trainingData);
+                            //classifier.classifyInstance(di);
+
+                            System.out.println("The sign you signed is ERROR");
+                        } else {
+                            System.out.println("No model!");
                         }
-                        // TODO: weka stuff
-                        System.out.println("ERROR NOT IMPLEMENTED");
-                        System.out.println("The sign you signed is ");
                     }
                 }
                 if (s == 'm') { 
+                    System.out.println("use [d] instead");
                     System.out.println("Where is the file located?");
                     String fileLoc = scanner.next();
                     // TODO: shortcut for ../savedata/models
                     
                     // load model
                     //classifier = 
-                    hasModel = true;
+                    //hasModel = true;
                 } else if (s == 'd') {
-                    System.out.println("Where is the file located? (leave blank to use last location)");
+                    System.out.println("Where is the file located? (\"...\" to use last location)");
                     String fileLoc = scanner.next();
                     // TODO: shortcut for ../savedata/td
-                    if (fileLoc == "") {
-                        if (trainingDataLoc == "") {
+                    if (fileLoc == "...") {
+                        if (trainingDataLoc != "") {
                             fileLoc = trainingDataLoc;
+                        } else {
+                          System.out.println("no last location!");
+                          fileLoc = "";
                         }
                     }
-                    // load training data
-                    DataSource src = new DataSource(fileLoc);
-                    trainingData = src.getDataSet();
-                    // set class index because this is not an ARFF
-                    if (trainingData.classIndex() == -1) {
-                        trainingData.setClassIndex(trainingData.numAttributes() - 1);
+                    if (fileLoc!="") {
+                        // load training data
+                        System.out.println("loading file at:"+fileLoc);
+                        DataSource src = new DataSource(fileLoc);
+                        System.out.println("loaded file ");
+                        trainingData = src.getDataSet();
+                        // set class index because this is not an ARFF
+                        if (trainingData.classIndex() == -1) {
+                            trainingData.setClassIndex(trainingData.numAttributes() - 1);
+                        }
+                        // remove id, time, cur and total frames
+                        trainingData.deleteAttributeAt(3);
+                        trainingData.deleteAttributeAt(2);
+                        trainingData.deleteAttributeAt(1);
+                        trainingData.deleteAttributeAt(0);
+                        // TODO: any other preprocessing?
+                        System.out.println("data loaded, press [y] to build the model");
                     }
-                    // remove id, time, cur and total frames
-                    trainingData.deleteAttributeAt(3);
-                    trainingData.deleteAttributeAt(2);
-                    trainingData.deleteAttributeAt(1);
-                    trainingData.deleteAttributeAt(0);
-                    // TODO: any other preprocessing?
                 }
                 if (s == 'c') {
-                    System.out.println("Current Classifier is: " + classifier.toString());
-
+                    System.out.println("Classifier: " + classifier.toString());
                 }
                 if (s == 'y') {
                     System.out.println("Training data on recorded training data with "+ classifier.toString()+"...");
-                    
-                    classifier.buildClassifier(trainingData);
                     // classifier.getCapabilities() instead of
                     hasModel = true;
-                    //classifier.classifyInstance(instnc)
-                    // TODO: cross-validation?
-                    // TODO: split by recording?
                     // TODO: check file to make sure there is enough data?
-                    // TODO: testing data to find accuracy ?
-                    System.out.println("Finished training model!");
+                    if (trainingData==null){
+                        System.out.println("No training data! please load some [d]");
+                    } else {
+                        Classify(trainingData);
+                        System.out.println("Finished training the model");
+                    }
                 }
             } else {
                 if (s == 'r' || s == 'n') {
@@ -254,7 +276,19 @@ public class LeapWekaASLTest {
                 running = false;
             }
         }
-        // TODO: wait a little?
+        System.out.println("---------------------");
+    }
+    public static void Classify(Instances inst) {
+        System.out.println("Building classifier and evaluating...");
+        try{
+            classifier.buildClassifier(inst);
+            Evaluation eval = new Evaluation(inst);
+            eval.evaluateModel(classifier, inst);
+            String s = eval.toSummaryString();
+            System.out.println(s);
+        } catch (Exception e) {
+           e.printStackTrace();
+        }
     }
     public static void RecordIn(String sign, int nframes, int delay) {
         if (leapSensor.HasData()) {
