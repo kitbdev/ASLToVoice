@@ -49,7 +49,7 @@ public class LeapWekaASLTest {
 
         boolean isRecordingTrainingData = false, hasModel = false;
 
-        int framesToRecord = 0;
+        int framesToRecord = 10;
 
         while (running) {
             isConnected = controller.isConnected();
@@ -94,6 +94,7 @@ public class LeapWekaASLTest {
                // }
                 System.out.print("\n");
             } else if (isConnected) {
+                System.out.print("[1] record digits 0-9 \n");
                 System.out.print("[n] Start Recording with new label, ");
                 System.out.print("[r] Start Recording with same label, ");
                 System.out.print("[q] Start Recording Sequence of classes, \n");
@@ -105,18 +106,20 @@ public class LeapWekaASLTest {
                     System.out.print("\n[s] Save Current Recording, ");
                     System.out.print("[c] Clear Current Recording, ");
                 }
-                System.out.print("\n[t] Stop Recording training data, ");
+                System.out.print("\n[t] Stop Recording training data\n ");
                 // TODO: delete file if empty (and better names)
             } else {
                 isRecordingTrainingData = false;
             }
-
-            System.out.print("or [e] Exit:\n");
-
+            if (!isRecordingTrainingData) {
+                System.out.print("or [e] Exit:\n");
+            }
             // get input
-            String sIn = scanner.next();
+            String sIn = "_";
+            if (scanner.hasNext()){
+                sIn = scanner.next();
+            }
             char s = sIn.toLowerCase().charAt(0);
-
             if (!isRecordingTrainingData) {
                 if (isConnected) {
                     if (s == 't') {
@@ -199,7 +202,7 @@ public class LeapWekaASLTest {
                         System.out.println("Finished training the model");
                     }
                 }
-            } else {
+            } else {// is recording training data
                 if (s == 'r' || s == 'n') {
                     String signName = "";
                     if (s == 'n') {
@@ -208,6 +211,13 @@ public class LeapWekaASLTest {
                     }
                     RecordIn(signName, framesToRecord, 3);
                     leapSensor.SaveRecording();
+                }
+                if (s == '1') {
+                    for (int i=0; i<1; i++) {                        
+                        RecordIn(("num"+i), framesToRecord, 3);
+                        leapSensor.SaveRecording();
+                    }
+                    System.out.println("All number signs recorded");
                 }
                 if (s == 'q') {
                     System.out.println("Enter the number of signs you will record: ");
@@ -277,6 +287,7 @@ public class LeapWekaASLTest {
             }
         }
         System.out.println("---------------------");
+        Thread.sleep(10);
     }
     public static void Classify(Instances inst) {
         System.out.println("Building classifier and evaluating...");
@@ -294,7 +305,7 @@ public class LeapWekaASLTest {
         if (leapSensor.HasData()) {
             leapSensor.SaveRecording();
         }
-        System.out.println("Sign "+sign);
+        System.out.println("\nSign "+sign);
         if (delay>1){
             for(int i=0; i<delay; i++) {
                 System.out.println((delay-i)+"...");
