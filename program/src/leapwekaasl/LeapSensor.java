@@ -36,6 +36,9 @@ public class LeapSensor {
                 //HandList hands = frame.hands();
                 Hand hand = frame.hands().frontmost();
                 if (hand.isValid()) {
+                    if (hand.isLeft()) {
+                        // flip it?
+                    }
                     //PointableList pointables = frame.pointables();
                     //ToolList tools = frame.tools();
                     // add time since start frame
@@ -108,8 +111,8 @@ public class LeapSensor {
     // start recording with the leap
     public void StartRecording(String signLabel) {
         if (!isFileOpen) {
-            System.out.println("start a file first!");
-            return;
+            //System.out.println("start a file first!");
+            //return;
         }
         recording = true;
         lastFrameID = 0;
@@ -220,7 +223,10 @@ public class LeapSensor {
         System.out.println("Saved " + sign);
         ClearRecording();
     }
-
+    public float LoadDataAt(int recordsIndex){
+        //TODO: average out data?
+        return records.get(recordsIndex);
+    }
     void AddPosRot(StringBuilder sb, String name) {
         sb.append(name);
         sb.append("_pos_x,");

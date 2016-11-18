@@ -24,9 +24,13 @@ public class LeapWekaASLTest {
     public static Controller controller = new Controller();
     public static LeapSensor leapSensor = new LeapSensor();
 
-    public static long POLLRATE = 100;//1.0/100.0;// 1 poll every .1 seconds in ms
-
+    public static long POLLRATE = 50;//ms
+    //1.0/100.0;// 1 poll every .1 seconds in ms //TODO: is this good?
     public static Classifier classifier;
+    public static int framesToRecord = 10;
+    public static boolean isConnected, hasRecording = false;
+    public static boolean isRecordingTrainingData = false, hasModel = false;
+        
 
     public static void main(String[] args)
             throws InterruptedException, IOException {
@@ -39,20 +43,13 @@ public class LeapWekaASLTest {
         }
         System.out.println("Exiting...");
     }
-
     public static void Menu() throws IOException, Exception {
         boolean running = true;
-        boolean isConnected, hasRecording = false;
-
+        
         String trainingDataLoc = null;
         Instances trainingData = null;
-
-        boolean isRecordingTrainingData = false, hasModel = false;
-
-        int framesToRecord = 10;
-
-        while (running) {
-            isConnected = controller.isConnected();
+        
+        isConnected = controller.isConnected();
             System.out.print("\n");
             System.out.println("Classifier: " + classifier.toString());
             if (isConnected) {
@@ -114,6 +111,9 @@ public class LeapWekaASLTest {
             if (!isRecordingTrainingData) {
                 System.out.print("or [e] Exit:\n");
             }
+        
+        while (running) {
+            
             // get input
             String sIn = "_";
             if (scanner.hasNext()){
@@ -125,26 +125,27 @@ public class LeapWekaASLTest {
                     if (s == 't') {
                         isRecordingTrainingData = true;
                         leapSensor.StartDataFile(true);
-                    } else if (s == 'n') {
+                    }
+                    if (s == 'n') {
                         if (hasModel) {
-                            try {
-                                Record("", framesToRecord);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
+                            RecordIn("_", framesToRecord, 3);
                             // TODO: weka stuff
                             System.out.println("analysing recorded data...");
-                            //DenseInstance di = new DenseInstance(trainingData.numAttributes());
+                            DenseInstance di = new DenseInstance(trainingData.numAttributes());
                             //get new values into array
-                            //di.setValue(indx, arr[indx]);
-
-                            //di.setDataset(trainingData);
-                            //classifier.classifyInstance(di);
-
-                            System.out.println("The sign you signed is ERROR");
+                            // LoadValues()
+                            for (int i=0;i<di.numAttributes();i++){
+                                di.setValue(i, leapSensor.LoadDataAt(i));
+                            }
+                            
+                            di.setDataset(trainingData);
+                            double n = classifier.classifyInstance(di);
+                            
+                            System.out.println("The sign you signed is " + n+".");
                         } else {
                             System.out.println("No model!");
                         }
+                        leapSensor.ClearRecording();
                     }
                 }
                 if (s == 'm') { 
@@ -160,7 +161,7 @@ public class LeapWekaASLTest {
                     System.out.println("Where is the file located? (\"...\" to use last location)");
                     String fileLoc = scanner.next();
                     // TODO: shortcut for ../savedata/td
-                    if (fileLoc == "...") {
+                    if (fileLoc.trim() == "...") {
                         if (trainingDataLoc != "") {
                             fileLoc = trainingDataLoc;
                         } else {
@@ -328,7 +329,7 @@ public class LeapWekaASLTest {
         if (nframes == 0) {
             System.out.println("Press Enter to stop recording");
         } else {
-            System.out.println("Recording for " + nframes + ", or " + nframes / POLLRATE + " seconds.");
+            System.out.println("Recording for " + nframes + ", or " + ((float)nframes / POLLRATE) + " seconds.");
         }
         leapSensor.ClearRecording();
         leapSensor.StartRecording(sign); // replace with some sign
@@ -358,6 +359,9 @@ public class LeapWekaASLTest {
                 framesLeft++;
                 System.out.println("Hand not detected! No data recorded.");
             } else {
+                if (nframes>=100 && framesLeft%10 == 0){
+                    System.out.println("frame "+(nframes-framesLeft));
+                }
                 //System.out.print(framesLeft+", \n");
             }
             long dt = System.currentTimeMillis() - frameStart; // time that this update took
