@@ -213,7 +213,7 @@ public class LeapWekaASLTest {
                     leapSensor.SaveRecording();
                 }
                 if (s == '1') {
-                    for (int i=0; i<1; i++) {                        
+                    for (int i=0; i<10; i++) {                        
                         RecordIn(("num"+i), framesToRecord, 3);
                         leapSensor.SaveRecording();
                     }
