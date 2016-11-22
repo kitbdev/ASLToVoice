@@ -17,6 +17,7 @@ import weka.core.DenseInstance;
 import java.util.Scanner;
 import java.io.IOException;
 //import jwsfilechooser;
+import java.util.List;
 
 public class LeapWekaASLTest {
 
@@ -30,7 +31,7 @@ public class LeapWekaASLTest {
     public static int framesToRecord = 10;
     public static boolean isConnected, hasRecording = false;
     public static boolean isRecordingTrainingData = false, hasModel = false;
-        
+    public static List<MenuItem> mis;
 
     public static void main(String[] args)
             throws InterruptedException, IOException {
@@ -43,13 +44,59 @@ public class LeapWekaASLTest {
         }
         System.out.println("Exiting...");
     }
+    
+    public static class MenuItem {
+        public String name = "Do this";
+        public char code = 'd';
+        public boolean enabled = false;
+        
+        public MenuItem(String promptname, char keycode) {
+            name=promptname;
+            code=keycode;
+        }
+        public void PrintPrompt() {
+            System.out.printf("[%s] %s.\n", code, name);
+        }
+        public boolean Check(char checkCode) {
+            if (code == checkCode) {
+                System.out.printf("Selected: %s.\n", name);
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+    
     public static void Menu() throws IOException, Exception {
         boolean running = true;
         
         String trainingDataLoc = null;
         Instances trainingData = null;
         
-        isConnected = controller.isConnected();
+        // TODO: run lambda function ?
+        mis.add(new MenuItem("Record training data", 't'));
+        mis.add(new MenuItem("Record data to classify", 'n'));
+                System.out.print("[d] Load training data, ");
+                System.out.print("[c] Change classifier type, ");
+                System.out.print("[y] Train classifier on data, ");
+                System.out.print("\n");
+                System.out.print("[1] record digits 0-9 \n");
+                System.out.print("[n] Start Recording with new label, ");
+                System.out.print("[r] Start Recording with same label, ");
+                System.out.print("[q] Start Recording Sequence of classes, \n");
+                System.out.print("[f] Set to record n frames, ");
+                System.out.print("[o] Set to record n seconds, ");
+                System.out.print("[i] Set to record until keypress, ");
+                System.out.print("\n[s] Save Current Recording, ");
+                System.out.print("[c] Clear Current Recording, ");
+                System.out.print("\n[t] Stop Recording training data\n ");
+                // TODO: make these part of menu and have them update active status each run
+                
+                
+                
+                
+        while (running) {
+            isConnected = controller.isConnected();
             System.out.print("\n");
             System.out.println("Classifier: " + classifier.toString());
             if (isConnected) {
@@ -72,7 +119,7 @@ public class LeapWekaASLTest {
             }
             // prompts
             System.out.print("\nPress a key and enter to make a selection:\n");
-
+           
             if (!isRecordingTrainingData) {
                 if (isConnected) {
                     System.out.print("[t] Record new training data, ");
@@ -112,7 +159,6 @@ public class LeapWekaASLTest {
                 System.out.print("or [e] Exit:\n");
             }
         
-        while (running) {
             
             // get input
             String sIn = "_";
@@ -377,3 +423,4 @@ public class LeapWekaASLTest {
         return leapSensor.ProcessFrame(frame);
     }
 }
+    
