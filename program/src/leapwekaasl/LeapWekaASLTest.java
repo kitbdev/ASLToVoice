@@ -28,13 +28,14 @@ public class LeapWekaASLTest {
     public static long POLLRATE = 50;//ms
     //1.0/100.0;// 1 poll every .1 seconds in ms //TODO: is this good?
     public static Classifier classifier;
+    public static Instances trainingData = null;
+
     public static int framesToRecord = 10;
     public static boolean isConnected, hasRecording = false;
     public static boolean isRecordingTrainingData = false, hasModel = false;
     public static List<MenuItem> mis;
 
-    public static void main(String[] args)
-            throws InterruptedException, IOException {
+    public static void main(String[] args) throws InterruptedException, IOException {
         //classifier = new J48();
         classifier = new IBk();
         try {
@@ -44,19 +45,22 @@ public class LeapWekaASLTest {
         }
         System.out.println("Exiting...");
     }
-    
+
     public static class MenuItem {
         public String name = "Do this";
         public char code = 'd';
         public boolean enabled = false;
-        
+        public function action;
+
         public MenuItem(String promptname, char keycode) {
-            name=promptname;
-            code=keycode;
+            name = promptname;
+            code = keycode;
         }
+
         public void PrintPrompt() {
             System.out.printf("[%s] %s.\n", code, name);
         }
+
         public boolean Check(char checkCode) {
             if (code == checkCode) {
                 System.out.printf("Selected: %s.\n", name);
@@ -66,35 +70,30 @@ public class LeapWekaASLTest {
             }
         }
     }
-    
+
     public static void Menu() throws IOException, Exception {
         boolean running = true;
-        
+
         String trainingDataLoc = null;
-        Instances trainingData = null;
-        
+
         // TODO: run lambda function ?
         mis.add(new MenuItem("Record training data", 't'));
         mis.add(new MenuItem("Record data to classify", 'n'));
-                System.out.print("[d] Load training data, ");
-                System.out.print("[c] Change classifier type, ");
-                System.out.print("[y] Train classifier on data, ");
-                System.out.print("\n");
-                System.out.print("[1] record digits 0-9 \n");
-                System.out.print("[n] Start Recording with new label, ");
-                System.out.print("[r] Start Recording with same label, ");
-                System.out.print("[q] Start Recording Sequence of classes, \n");
-                System.out.print("[f] Set to record n frames, ");
-                System.out.print("[o] Set to record n seconds, ");
-                System.out.print("[i] Set to record until keypress, ");
-                System.out.print("\n[s] Save Current Recording, ");
-                System.out.print("[c] Clear Current Recording, ");
-                System.out.print("\n[t] Stop Recording training data\n ");
-                // TODO: make these part of menu and have them update active status each run
-                
-                
-                
-                
+        mis.add(new MenuItem("Load training data", 'd'));
+        mis.add(new MenuItem("Change classifier type", 'c'));
+        mis.add(new MenuItem("Train classifier on data", 'y'));
+        mis.add(new MenuItem("Record digits 0-9", '1'));
+        mis.add(new MenuItem("Start Recording with new label", 'n'));
+        mis.add(new MenuItem("Start Recording with same label", 'r'));
+        mis.add(new MenuItem("Start Recording Sequence of classes", 'q'));
+        mis.add(new MenuItem("Set to record n frames", 'f'));
+        mis.add(new MenuItem("Set to record n seconds", 'o'));
+        mis.add(new MenuItem("Set to record until keypress", 'i'));
+        mis.add(new MenuItem("Save Current Recording", 's'));
+        mis.add(new MenuItem("Clear Current Recording", 'c'));
+        mis.add(new MenuItem("Stop Recording training data", 't'));
+        // TODO: make these part of menu and have them update active status each run
+        
         while (running) {
             isConnected = controller.isConnected();
             System.out.print("\n");
@@ -119,7 +118,7 @@ public class LeapWekaASLTest {
             }
             // prompts
             System.out.print("\nPress a key and enter to make a selection:\n");
-           
+
             if (!isRecordingTrainingData) {
                 if (isConnected) {
                     System.out.print("[t] Record new training data, ");
@@ -127,17 +126,17 @@ public class LeapWekaASLTest {
                         System.out.print("[n] Record data to classify, ");
                     }
                 }
-               // System.out.print("[m] Load Model, ");
+                // System.out.print("[m] Load Model, ");
                 System.out.print("[d] Load training data, ");
                 System.out.print("[c] Change classifier type, ");
-               // if (!trainingData.isEmpty()) {
+                // if (!trainingData.isEmpty()) {
                 System.out.print("[y] Train classifier on data, ");
-               // }
-               // if (hasModel) {
-                    // TODO: save model
-               // }
+                // }
+                // if (hasModel) {
+                // TODO: save model
+                // }
                 System.out.print("\n");
-            } else if (isConnected) {
+            } else if (isConnected) {// is recording training data
                 System.out.print("[1] record digits 0-9 \n");
                 System.out.print("[n] Start Recording with new label, ");
                 System.out.print("[r] Start Recording with same label, ");
@@ -158,143 +157,58 @@ public class LeapWekaASLTest {
             if (!isRecordingTrainingData) {
                 System.out.print("or [e] Exit:\n");
             }
-        
-            
+
             // get input
             String sIn = "_";
-            if (scanner.hasNext()){
+            if (scanner.hasNext()) {
                 sIn = scanner.next();
             }
             char s = sIn.toLowerCase().charAt(0);
             if (!isRecordingTrainingData) {
                 if (isConnected) {
                     if (s == 't') {
+                        //Start Recording Training Data
                         isRecordingTrainingData = true;
                         leapSensor.StartDataFile(true);
                     }
                     if (s == 'n') {
-                        if (hasModel) {
-                            RecordIn("_", framesToRecord, 3);
-                            // TODO: weka stuff
-                            System.out.println("analysing recorded data...");
-                            DenseInstance di = new DenseInstance(trainingData.numAttributes());
-                            //get new values into array
-                            // LoadValues()
-                            for (int i=0;i<di.numAttributes();i++){
-                                di.setValue(i, leapSensor.LoadDataAt(i));
-                            }
-                            
-                            di.setDataset(trainingData);
-                            double n = classifier.classifyInstance(di);
-                            
-                            System.out.println("The sign you signed is " + n+".");
-                        } else {
-                            System.out.println("No model!");
-                        }
-                        leapSensor.ClearRecording();
+                        RecordTestData();
                     }
                 }
-                if (s == 'm') { 
-                    System.out.println("use [d] instead");
-                    System.out.println("Where is the file located?");
-                    String fileLoc = scanner.next();
-                    // TODO: shortcut for ../savedata/models
-                    
-                    // load model
-                    //classifier = 
-                    //hasModel = true;
+                if (s == 'm') {
+                    LoadModel();
                 } else if (s == 'd') {
-                    System.out.println("Where is the file located? (\"...\" to use last location)");
-                    String fileLoc = scanner.next();
-                    // TODO: shortcut for ../savedata/td
-                    if (fileLoc.trim() == "...") {
-                        if (trainingDataLoc != "") {
-                            fileLoc = trainingDataLoc;
-                        } else {
-                          System.out.println("no last location!");
-                          fileLoc = "";
-                        }
-                    }
-                    if (fileLoc!="") {
-                        // load training data
-                        System.out.println("loading file at:"+fileLoc);
-                        DataSource src = new DataSource(fileLoc);
-                        System.out.println("loaded file ");
-                        trainingData = src.getDataSet();
-                        // set class index because this is not an ARFF
-                        if (trainingData.classIndex() == -1) {
-                            trainingData.setClassIndex(trainingData.numAttributes() - 1);
-                        }
-                        // remove id, time, cur and total frames
-                        trainingData.deleteAttributeAt(3);
-                        trainingData.deleteAttributeAt(2);
-                        trainingData.deleteAttributeAt(1);
-                        trainingData.deleteAttributeAt(0);
-                        // TODO: any other preprocessing?
-                        System.out.println("data loaded, press [y] to build the model");
-                    }
+                    LoadTrainingData();
                 }
                 if (s == 'c') {
                     System.out.println("Classifier: " + classifier.toString());
                 }
                 if (s == 'y') {
-                    System.out.println("Training data on recorded training data with "+ classifier.toString()+"...");
-                    // classifier.getCapabilities() instead of
-                    hasModel = true;
-                    // TODO: check file to make sure there is enough data?
-                    if (trainingData==null){
-                        System.out.println("No training data! please load some [d]");
-                    } else {
-                        Classify(trainingData);
-                        System.out.println("Finished training the model");
-                    }
+                    BuildModel();
                 }
             } else {// is recording training data
                 if (s == 'r' || s == 'n') {
-                    String signName = "";
-                    if (s == 'n') {
-                        System.out.println("Enter the sign name: ");
-                        signName = scanner.next();
-                    }
-                    RecordIn(signName, framesToRecord, 3);
-                    leapSensor.SaveRecording();
+                    // Record Sign
+                    RecordSigns(false);
                 }
                 if (s == '1') {
-                    for (int i=0; i<10; i++) {                        
-                        RecordIn(("num"+i), framesToRecord, 3);
+                    // Record Numbers
+                    for (int i = 0; i < 10; i++) {
+                        RecordIn(("num" + i), framesToRecord, 3);
                         leapSensor.SaveRecording();
                     }
                     System.out.println("All number signs recorded");
                 }
                 if (s == 'q') {
-                    System.out.println("Enter the number of signs you will record: ");
-                    int numSigns = scanner.nextInt();
-                    String signNames[] = new String[numSigns];
-                    System.out.println("Enter the sign names one a time: ");
-                    for (int i=0; i<numSigns; i++) {
-                        System.out.print("\nSign "+(i+1)+": ");
-                        signNames[i] = scanner.next();
-                    }
-                    for (int i=0; i<numSigns; i++) {
-                        
-                        RecordIn(signNames[i], framesToRecord, 3);
-                        
-                        // TODO: give chance to retry
-                        if (false) {
-                            // redo
-                            leapSensor.ClearRecording();
-                            i--;
-                        } else {
-                            leapSensor.SaveRecording();
-                        }
-                    }
-                    System.out.println("All signs recorded");
+                    RecordSigns(true);
                 }
                 if (s == 'i') {
+                    // Record Mode Key Press
                     framesToRecord = 0;
                     System.out.println("Will record until a key is pressed.");
                 }
                 if (s == 'f' || s == 'o') {
+                    // Record Mode Frames
                     System.out.print("\nEnter the number of ");
                     if (s == 'o') {
                         System.out.print("seconds");
@@ -305,7 +219,7 @@ public class LeapWekaASLTest {
                     int n;
                     if (s == 'o') {
                         float m = scanner.nextFloat();
-                        n = (int)Math.floor(m*POLLRATE);
+                        n = (int) Math.floor((float) m * POLLRATE);// is this right?
                     } else {
                         n = scanner.nextInt();
                     }
@@ -314,15 +228,18 @@ public class LeapWekaASLTest {
                 }
                 if (hasRecording) {
                     if (s == 's') {
+                        // Save Last Recording
                         System.out.println("Saving last recorded data");
                         leapSensor.SaveRecording();
                     }
                     if (s == 'c') {
+                        // Clear Last Recording
                         System.out.println("Clearing last recorded data");
                         leapSensor.ClearRecording();
                     }
                 }
                 if (s == 't') {
+                    // Finish Recording Training Data
                     System.out.println("Finishing recording of training data");
                     leapSensor.FinishDataFile();
                     isRecordingTrainingData = false;
@@ -330,35 +247,150 @@ public class LeapWekaASLTest {
                 }
             }
             if (s == 'e') {
+                // Exit
                 running = false;
             }
         }
         System.out.println("---------------------");
         Thread.sleep(10);
     }
-    public static void Classify(Instances inst) {
-        System.out.println("Building classifier and evaluating...");
-        try{
-            classifier.buildClassifier(inst);
-            Evaluation eval = new Evaluation(inst);
-            eval.evaluateModel(classifier, inst);
-            String s = eval.toSummaryString();
-            System.out.println(s);
-        } catch (Exception e) {
-           e.printStackTrace();
+
+    public static void RecordTestData() {
+        if (hasModel) {
+            RecordIn("_", framesToRecord, 3);
+            System.out.println("analysing recorded data...");
+            DenseInstance di = new DenseInstance(trainingData.numAttributes());
+            //get new values into array
+            // LoadValues() ?
+            for (int i = 0; i < di.numAttributes(); i++) {
+                di.setValue(i, leapSensor.LoadDataAt(i));
+            }
+
+            di.setDataset(trainingData);
+            try {
+                double n = classifier.classifyInstance(di);
+                System.out.println("The sign you signed is " + n + ".");
+            } catch (Exception e) {
+                e.printStackTrace();
+                return;
+            }
+        } else {
+            System.out.println("No model!");
         }
+        leapSensor.ClearRecording();
     }
+
+    public static void LoadModel() {
+        System.out.println("Enter Model Location: ../savedata//");
+        System.out.println("ERROR");
+    }
+
+    public static void LoadTrainingData() {
+        System.out.println("Enter Training Data Location: ../savedata/td/");
+        String fileLoc = "../savedata/td/";
+        fileLoc += scanner.next();
+        // TODO: shortcut for ../savedata/td
+        // (\"...\" to use last location)");
+        //        if (fileLoc.trim() == "...") {
+        //            if (trainingDataLoc != "") {
+        //                fileLoc = trainingDataLoc;
+        //            } else {
+        //              System.out.println("no last location!");
+        //              fileLoc = "";
+        //            }
+        //        }
+        System.out.println("loading file at:" + fileLoc);
+        try {
+            DataSource src = new DataSource(fileLoc);
+            System.out.println("loaded file ");
+            trainingData = src.getDataSet();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
+        // set class index because this is not an ARFF
+        if (trainingData.classIndex() == -1) {
+            trainingData.setClassIndex(trainingData.numAttributes() - 1);
+        }
+        // TODO: one instance includes multiple frames
+        // remove id, time, cur and total frames
+        trainingData.deleteAttributeAt(3);
+        trainingData.deleteAttributeAt(2);
+        trainingData.deleteAttributeAt(1);
+        trainingData.deleteAttributeAt(0);
+        // TODO: any other preprocessing?
+        //System.out.println("data loaded, press [y] to build the model");
+        System.out.println("Training Data loaded");
+        BuildModel();
+    }
+
+    public static void BuildModel() {
+        // Create Model
+        System.out.println("Building Model with " + classifier.toString() + "...");
+        //System.out.println("Training data on recorded training data with "+ classifier.toString()+"...");
+        // TODO: check file to make sure there is enough data?
+        if (trainingData == null) {
+            System.out.println("No training data! Please load data with [d]");
+            return;
+        }
+        //System.out.println("Building model and evaluating...");
+        try {
+            classifier.buildClassifier(trainingData);
+            Evaluation eval = new Evaluation(trainingData);
+            eval.evaluateModel(classifier, trainingData);
+            String summ = eval.toSummaryString();
+            System.out.println(summ);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println("Finished training the model");
+        // classifier.getCapabilities() instead of
+        hasModel = true;
+    }
+
+    public static void RecordSigns(boolean multiple) {
+        int numSigns = 1;
+        if (multiple) {
+            System.out.println("Enter the number of signs you will record: ");
+            numSigns = scanner.nextInt();
+        }
+
+        String signNames[] = new String[numSigns];
+        if (multiple) {
+            System.out.println("Enter the sign names one a time: ");
+            for (int i = 0; i < numSigns; i++) {
+                System.out.print("\nSign " + (i + 1) + ": ");
+                signNames[i] = scanner.next();
+            }
+        } else {
+            System.out.println("Enter the sign name: ");
+            signNames[0] = scanner.next();
+        }
+        for (int i = 0; i < numSigns; i++) {
+            RecordIn(signNames[i], framesToRecord, 3);
+            leapSensor.SaveRecording();
+            // TODO: give chance to retry
+            //            if (false) {
+            //                // redo
+            //                leapSensor.ClearRecording();
+            //                i--;
+            //            } else {
+            //            }
+        }
+        System.out.println("All signs recorded");
+    }
+
     public static void RecordIn(String sign, int nframes, int delay) {
         if (leapSensor.HasData()) {
             leapSensor.SaveRecording();
         }
-        System.out.println("\nSign "+sign);
-        if (delay>1){
-            for(int i=0; i<delay; i++) {
-                System.out.println((delay-i)+"...");
+        System.out.println("\nSign " + sign);
+        if (delay > 1) {
+            for (int i = 0; i < delay; i++) {
+                System.out.println((delay - i) + "...");
                 try {
                     Thread.sleep(1000);
-                } catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
@@ -370,12 +402,13 @@ public class LeapWekaASLTest {
             e.printStackTrace();
         }
     }
+
     public static void Record(String sign, int nframes) throws IOException, InterruptedException {
         // pass in "" to record non-labelled
         if (nframes == 0) {
             System.out.println("Press Enter to stop recording");
         } else {
-            System.out.println("Recording for " + nframes + ", or " + ((float)nframes / POLLRATE) + " seconds.");
+            System.out.println("Recording for " + nframes + ", or " + ((float) nframes / POLLRATE) + " seconds.");
         }
         leapSensor.ClearRecording();
         leapSensor.StartRecording(sign); // replace with some sign
@@ -383,7 +416,7 @@ public class LeapWekaASLTest {
         long timeSinceStart = System.currentTimeMillis();
         //long dt = 0, frameStart = 0;
 
-        System.out.println("Recording "+sign);
+        System.out.println("Recording " + sign);
         int framesLeft = nframes + 1;
         boolean exit = false;
         while (!exit) {
@@ -405,8 +438,8 @@ public class LeapWekaASLTest {
                 framesLeft++;
                 System.out.println("Hand not detected! No data recorded.");
             } else {
-                if (nframes>=100 && framesLeft%10 == 0){
-                    System.out.println("frame "+(nframes-framesLeft));
+                if (nframes >= 100 && framesLeft % 10 == 0) {
+                    System.out.println("frame " + (nframes - framesLeft));
                 }
                 //System.out.print(framesLeft+", \n");
             }
@@ -423,4 +456,3 @@ public class LeapWekaASLTest {
         return leapSensor.ProcessFrame(frame);
     }
 }
-    
