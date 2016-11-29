@@ -145,11 +145,11 @@ public class LeapSensor {
         return !records.isEmpty();
     }
 
-    public void StartDataFile(boolean isTrainingData) throws FileNotFoundException {
+    public void StartDataFile(boolean isTrainingData, String saveLoc) throws FileNotFoundException {
         LocalDateTime date = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("kkmmss_ddMMyy");//hourminutesecond_daymonthyear
         String text = date.format(formatter);
-        String fname = "..\\savedata\\trainingdata\\";
+        String fname = saveLoc;
         if (isTrainingData) {
             fname += "td_";
         }
