@@ -1,4 +1,4 @@
-package leapwekaasl;
+package asltovoice;
 
 import com.leapmotion.leap.*;
 import java.io.File;

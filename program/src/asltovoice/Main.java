@@ -1,4 +1,4 @@
-package leapwekaasl;
+package asltovoice;
 
 import com.leapmotion.leap.*;
 
@@ -19,8 +19,8 @@ import java.io.IOException;
 //import jwsfilechooser;
 import java.util.List;
 
-public class LeapWekaASLTest {
-
+public class Main {
+        
     public static Scanner scanner = new Scanner(System.in);
     public static Controller controller = new Controller();
     public static LeapSensor leapSensor = new LeapSensor();
@@ -48,13 +48,18 @@ public class LeapWekaASLTest {
 
     public static class MenuItem {
         public String name = "Do this";
-        public char code = 'd';
+        public char code = 'k';
         public boolean enabled = false;
-        public function action;
+        public boolean needsController = false;
 
         public MenuItem(String promptname, char keycode) {
             name = promptname;
             code = keycode;
+        }
+        public MenuItem(String promptname, char keycode, boolean needsConnection) {
+            name = promptname;
+            code = keycode;
+            needsController = needsConnection;
         }
 
         public void PrintPrompt() {
@@ -69,29 +74,36 @@ public class LeapWekaASLTest {
                 return false;
             }
         }
+        public boolean IsAvailable(boolean connected) {
+            return !needsController || connected;
+        }
     }
 
     public static void Menu() throws IOException, Exception {
         boolean running = true;
 
         String trainingDataLoc = null;
-
+//        Interface a;
+//        a = Main.RecordTestData;
+        
         // TODO: run lambda function ?
-        mis.add(new MenuItem("Record training data", 't'));
-        mis.add(new MenuItem("Record data to classify", 'n'));
+        mis.add(new MenuItem("Record training data", 't', true));
+        mis.add(new MenuItem("Record data to classify", 'n', true));
         mis.add(new MenuItem("Load training data", 'd'));
         mis.add(new MenuItem("Change classifier type", 'c'));
         mis.add(new MenuItem("Train classifier on data", 'y'));
-        mis.add(new MenuItem("Record digits 0-9", '1'));
-        mis.add(new MenuItem("Start Recording with new label", 'n'));
-        mis.add(new MenuItem("Start Recording with same label", 'r'));
-        mis.add(new MenuItem("Start Recording Sequence of classes", 'q'));
+        int trainingDataMenuItems = mis.size();
+        mis.add(new MenuItem("Record digits 0-9", '1', true));
+        mis.add(new MenuItem("Start Recording with new label", 'n', true));
+        mis.add(new MenuItem("Start Recording with same label", 'r', true));
+        mis.add(new MenuItem("Start Recording Sequence of classes", 'q', true));
         mis.add(new MenuItem("Set to record n frames", 'f'));
         mis.add(new MenuItem("Set to record n seconds", 'o'));
         mis.add(new MenuItem("Set to record until keypress", 'i'));
-        mis.add(new MenuItem("Save Current Recording", 's'));
+        mis.add(new MenuItem("Save Current Recording", 's')); // include has data flag?
         mis.add(new MenuItem("Clear Current Recording", 'c'));
         mis.add(new MenuItem("Stop Recording training data", 't'));
+        mis.add(new MenuItem("Exit", 'e'));
         // TODO: make these part of menu and have them update active status each run
         
         while (running) {
@@ -118,45 +130,54 @@ public class LeapWekaASLTest {
             }
             // prompts
             System.out.print("\nPress a key and enter to make a selection:\n");
-
-            if (!isRecordingTrainingData) {
-                if (isConnected) {
-                    System.out.print("[t] Record new training data, ");
-                    if (hasModel) {
-                        System.out.print("[n] Record data to classify, ");
-                    }
+            
+            //TODO: only print numbers that correspond to isrecordingtrainingdata
+            for (int i=0;i<mis.size();i++) {
+                if ((isRecordingTrainingData && i>trainingDataMenuItems) || 
+                        (!isRecordingTrainingData && i<=trainingDataMenuItems))
+                if (mis.get(i).IsAvailable(isConnected)) {
+                    mis.get(i).PrintPrompt();
                 }
-                // System.out.print("[m] Load Model, ");
-                System.out.print("[d] Load training data, ");
-                System.out.print("[c] Change classifier type, ");
-                // if (!trainingData.isEmpty()) {
-                System.out.print("[y] Train classifier on data, ");
-                // }
-                // if (hasModel) {
-                // TODO: save model
-                // }
-                System.out.print("\n");
-            } else if (isConnected) {// is recording training data
-                System.out.print("[1] record digits 0-9 \n");
-                System.out.print("[n] Start Recording with new label, ");
-                System.out.print("[r] Start Recording with same label, ");
-                System.out.print("[q] Start Recording Sequence of classes, \n");
-                System.out.print("[f] Set to record n frames, ");
-                System.out.print("[o] Set to record n seconds, ");
-                System.out.print("[i] Set to record until keypress, ");
-                hasRecording = leapSensor.HasData();
-                if (hasRecording) {
-                    System.out.print("\n[s] Save Current Recording, ");
-                    System.out.print("[c] Clear Current Recording, ");
-                }
-                System.out.print("\n[t] Stop Recording training data\n ");
-                // TODO: delete file if empty (and better names)
-            } else {
-                isRecordingTrainingData = false;
             }
-            if (!isRecordingTrainingData) {
-                System.out.print("or [e] Exit:\n");
-            }
+            
+//            if (!isRecordingTrainingData) {
+//                if (isConnected) {
+//                    System.out.print("[t] Record new training data, ");
+//                    if (hasModel) {
+//                        System.out.print("[n] Record data to classify, ");
+//                    }
+//                }
+//                // System.out.print("[m] Load Model, ");
+//                System.out.print("[d] Load training data, ");
+//                System.out.print("[c] Change classifier type, ");
+//                // if (!trainingData.isEmpty()) {
+//                System.out.print("[y] Train classifier on data, ");
+//                // }
+//                // if (hasModel) {
+//                // TODO: save model
+//                // }
+//                System.out.print("\n");
+//            } else if (isConnected) {// is recording training data
+//                System.out.print("[1] record digits 0-9 \n");
+//                System.out.print("[n] Start Recording with new label, ");
+//                System.out.print("[r] Start Recording with same label, ");
+//                System.out.print("[q] Start Recording Sequence of classes, \n");
+//                System.out.print("[f] Set to record n frames, ");
+//                System.out.print("[o] Set to record n seconds, ");
+//                System.out.print("[i] Set to record until keypress, ");
+//                hasRecording = leapSensor.HasData();
+//                if (hasRecording) {
+//                    System.out.print("\n[s] Save Current Recording, ");
+//                    System.out.print("[c] Clear Current Recording, ");
+//                }
+//                System.out.print("\n[t] Stop Recording training data\n ");
+//                // TODO: delete file if empty (and better names)
+//            } else {
+//                isRecordingTrainingData = false;
+//            }
+//            if (!isRecordingTrainingData) {
+//                System.out.print("or [e] Exit:\n");
+//            }
 
             // get input
             String sIn = "_";
