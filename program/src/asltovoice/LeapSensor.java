@@ -162,8 +162,8 @@ public class LeapSensor {
         savePath = fname;
         rid = 0;
         totalId = 0;
-        System.out.println("New file is ");
-        System.out.println("_" + fname);
+        System.out.println("New file is: ");
+        System.out.println(fname);
         openFile = new PrintWriter(new File(fname));
         isFileOpen = true;
         StringBuilder sb = new StringBuilder();

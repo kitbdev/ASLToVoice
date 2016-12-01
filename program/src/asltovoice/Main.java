@@ -11,19 +11,12 @@ import weka.classifiers.lazy.IBk;
 import weka.classifiers.Evaluation;
 import weka.core.DenseInstance;
 
-//import java.io.BufferedReader;
-//import java.io.BufferedWriter;
-//import java.io.FileReader;
-//import java.io.FileWriter;
 import java.util.Scanner;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-//import jwsfilechooser;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Main {
 
@@ -105,13 +98,12 @@ public class Main {
     public static void Menu() throws IOException, Exception {
 
         String trainingDataLoc = null;
-        //        Interface a;
-        //        a = Main.RecordTestData;
 
+        // create all menu items
         List<MenuItem> mainmis = new ArrayList<>();
         List<MenuItem> tdmis = new ArrayList<>();
-        // TODO: run lambda function ?
-        mainmis.add(new MenuItem("Record training data", 't'));
+        // main menu items
+        mainmis.add(new MenuItem("Record training data", 'r'));
         mainmis.get(mainmis.size() - 1).needsController = true;
         mainmis.get(mainmis.size() - 1).command = (Object data) -> {
             isRecordingTrainingData = true;
@@ -126,53 +118,39 @@ public class Main {
         mainmis.add(new SaveModel("Save model", 's'));//TODO needs hasModel -- in method now?
         mainmis.add(new LoadModel("Load model", 'l'));
         //mainmis.add(new MenuItem("Change classifier type", 'c'));
-        mainmis.add(new BuildModel("Build model with training data", 'y'));
+        mainmis.add(new BuildModel("Build model with training data", 'b'));
         mainmis.add(new MenuItem("Exit", 'e'));
-        mainmis.get(mainmis.size() - 1).command = new Command() {
-            @Override
-            public void execute(Object data) {
-                running = false;
-                //TODO fix stopping
-            }
+        mainmis.get(mainmis.size() - 1).command = (Object data) -> {
+            running = false;
         };
 
-        //tdmis.add(new MenuItem("Record digits 0-9", '1'));
+        // training data menu items
         tdmis.add(new RecordSigns("Start Recording with new label", 'n', false));
         //tdmis.add(new RecordSigns("Start Recording with same label", 'r', false));
         tdmis.add(new RecordSigns("Start Recording Sequence of classes", 'q', true));
-        tdmis.add(new MenuItem("Set to record n frames", 'f'));
-        tdmis.add(new MenuItem("Set to record n seconds", 'o'));
-        tdmis.add(new MenuItem("Set to record until keypress", 'i'));
+        tdmis.add(new RecordMode("Set to record n frames", 'f'));
         tdmis.add(new MenuItem("Save Current Recording", 's')); // include has data flag?
-        tdmis.get(tdmis.size() - 1).command = new Command() {
-            @Override
-            public void execute(Object data) {
-                System.out.println("Saving last recorded data");
-                leapSensor.SaveRecording();
-            }
+        tdmis.get(tdmis.size() - 1).command = (Object data) -> {
+            System.out.println("Saving last recorded data");
+            leapSensor.SaveRecording();
         };
         tdmis.add(new MenuItem("Clear Current Recording", 'c'));// TODO: needs leapSensor.HasData();
-        tdmis.get(tdmis.size() - 1).command = new Command() {
-            @Override
-            public void execute(Object data) {
-                System.out.println("Clearing last recorded data");
-                leapSensor.ClearRecording();
-            }
+        tdmis.get(tdmis.size() - 1).command = (Object data) -> {
+            System.out.println("Clearing last recorded data");
+            leapSensor.ClearRecording();
         };
         tdmis.add(new MenuItem("Stop Recording training data", 't'));
         tdmis.get(tdmis.size() - 1).command = new Command() {
             @Override
             public void execute(Object data) {
-                leapSensor = (LeapSensor) data;//TODO pass by reference?
                 System.out.println("Finishing recording of training data");
                 leapSensor.FinishDataFile();
                 isRecordingTrainingData = false;
-                //trainingDataLoc = leapSensor.savePath;
+                //trainingDataLoc = leapSensor.savePath; // do we need this?
                 // TODO: delete file if empty (and better names)
                 //TODO auto stop if not connected?
             }
         };
-        // TODO: make these part of menu and have them update active status each run
 
         while (running) {
             isConnected = controller.isConnected();
@@ -180,37 +158,35 @@ public class Main {
             System.out.println("Classifier: " + classifier.toString());
             if (isConnected) {
                 System.out.println("CONNECTED");
-                if (isRecordingTrainingData) {
-                    if (framesToRecord > 0) {
-                        System.out.print("Will Record for: " + framesToRecord + " frames, or "
-                                + (float) framesToRecord / POLLRATE + " seconds.");
-                    } else {
-                        System.out.println("Recording until keypress.");
-                    }
-                    if (leapSensor.HasData()) {
-                        System.out.print("Usaved data recorded, please clear or save.");
-                    }
-                    System.out.print("\n");
-                }
             } else {
                 //System.out.println("Connect to a LEAP motion sensor for more options");
                 System.out.println("DISCONNECTED");
             }
-            // prompts
-            System.out.print("\nPress a key and enter to make a selection:\n");
-
-            // print main menu prompts
-            for (int i = 0; i < mainmis.size(); i++) {
-                if (mainmis.get(i).IsAvailable(isConnected)) {
-                    mainmis.get(i).PrintPrompt();
+            if (isRecordingTrainingData) {
+                if (framesToRecord > 0) {
+                    System.out.println("Recording for: " + framesToRecord + " frames");
+                } else {
+                    System.out.println("Recording until keypress.");
+                }
+                if (leapSensor.HasData()) {
+                    System.out.println("Unsaved data recorded, please clear or save.");
                 }
             }
+            // prompts
+            System.out.print("Press a key and enter to make a selection:\n");
+
             // print training data prompts
             if (isRecordingTrainingData) {
                 for (int i = 0; i < tdmis.size(); i++) {
                     if (tdmis.get(i).IsAvailable(isConnected)) {
                         tdmis.get(i).PrintPrompt();
                     }
+                }
+            }
+            // print main menu prompts
+            for (int i = 0; i < mainmis.size(); i++) {
+                if (mainmis.get(i).IsAvailable(isConnected)) {
+                    mainmis.get(i).PrintPrompt();
                 }
             }
 
@@ -243,42 +219,11 @@ public class Main {
                     }
                 }
             }
-            // TODO: implement these
-            //     if (s == 'c') {
-            //         System.out.println("Classifier: " + classifier.toString());
-            //     }
-            //     if (s == '1') {
-            //         // Record Numbers
-            //         for (int i = 0; i < 10; i++) {
-            //             RecordIn(("num" + i), framesToRecord, 3);
-            //             leapSensor.SaveRecording();
-            //         }
-            //         System.out.println("All number signs recorded");
-            //     }
-            //     if (s == 'i') {
-            //         // Record Mode Key Press
-            //         framesToRecord = 0;
-            //         System.out.println("Will record until a key is pressed.");
-            //     }
-            //     if (s == 'f' || s == 'o') {
-            //         // Record Mode Frames
-            //         System.out.print("\nEnter the number of ");
-            //         if (s == 'o') {
-            //             System.out.print("seconds");
-            //         } else {
-            //             System.out.print("frames");
-            //         }
-            //         System.out.print(" to record for: ");
-            //         int n;
-            //         if (s == 'o') {
-            //             float m = scanner.nextFloat();
-            //             n = (int) Math.floor((float) m * POLLRATE);// is this right?
-            //         } else {
-            //             n = scanner.nextInt();
-            //         }
-            //         framesToRecord = n;
-            //         System.out.println("Will record for " + framesToRecord + " frames.");
-            //     }
+            if (!found) {
+                System.out.printf("[%s] not found", s);
+            }
+
+            // wait for next command
             //TODO: look into clearing console
             if (running) {
                 System.out.print("\n");
@@ -305,7 +250,7 @@ public class Main {
         public void execute(Object data) {
             if (hasModel) {
                 RecordIn("_", framesToRecord, 3);
-                System.out.println("analysing recorded data...");
+                System.out.println("Analysing recorded data...");
                 DenseInstance di = new DenseInstance(trainingData.numAttributes());
                 //get new values into array
                 // LoadValues() ?
@@ -329,17 +274,25 @@ public class Main {
     }
 
     public static class RecordMode extends MenuItem {
-
-        public RecordMode(String promptname, char keycode, boolean isForKeyPress) {
+        //boolean inSeconds;
+        public RecordMode(String promptname, char keycode) {
             super(promptname, keycode);
             //needsController = true;
-
         }
 
         @Override
         public void execute(Object data) {
-            // prompt user for number of frames 
-            // TODO
+            // prompt user for number of frames to record for
+            System.out.print("\nEnter the number of frames to record for (0 waits for keypress): ");
+            int n;
+            n = scanner.nextInt();
+            if (n <= 0) {
+                framesToRecord = 0;
+                System.out.println("Will record until a key is pressed.");
+            } else {
+                framesToRecord = n;
+                System.out.println("Will record for " + framesToRecord + " frames.");
+            }
         }
     }
 
@@ -439,13 +392,11 @@ public class Main {
         public void execute(Object data) {
             // Create Model
             System.out.println("Building Model with " + classifier.toString() + "...");
-            //System.out.println("Training data on recorded training data with "+ classifier.toString()+"...");
             // TODO: check file to make sure there is enough data?
             if (trainingData == null) {
                 System.out.println("No training data! Please load data with [d]");
                 return;
             }
-            //System.out.println("Building model and evaluating...");
             try {
                 classifier.buildClassifier(trainingData);
                 Evaluation eval = new Evaluation(trainingData);
