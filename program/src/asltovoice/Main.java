@@ -41,6 +41,7 @@ public class Main {
     public static boolean isRecordingTrainingData = false, hasModel = false;
 
     public static String saveLoc = "../savedata/";
+    public static boolean running = true;
 
     public static void main(String[] args) throws InterruptedException, IOException {
         //classifier = new J48();
@@ -86,6 +87,11 @@ public class Main {
             return !needsController || connected;
         }
 
+        public void Run(Object data) {
+            //System.out.printf("> %s\n", name);
+            execute(data);
+        }
+
         @Override
         public void execute(Object data) {
             if (command != null) {
@@ -97,7 +103,6 @@ public class Main {
     }
 
     public static void Menu() throws IOException, Exception {
-        boolean running = true;
 
         String trainingDataLoc = null;
         //        Interface a;
@@ -107,7 +112,8 @@ public class Main {
         List<MenuItem> tdmis = new ArrayList<>();
         // TODO: run lambda function ?
         mainmis.add(new MenuItem("Record training data", 't'));
-        mainmis.get(mainmis.size()-1).command = (Object data) -> {
+        mainmis.get(mainmis.size() - 1).needsController = true;
+        mainmis.get(mainmis.size() - 1).command = (Object data) -> {
             isRecordingTrainingData = true;
             try {
                 leapSensor.StartDataFile(true, saveLoc);
@@ -115,17 +121,17 @@ public class Main {
                 e.printStackTrace();
             }
         };
-        mainmis.add(new RecordTestData("Record data to classify", 'n'));//TODO needs !trainingData.isEmpty() and hasModel?
+        mainmis.add(new RecordTestData("Record new test data", 'n'));//TODO needs !trainingData.isEmpty() and hasModel?
         mainmis.add(new LoadTrainingData("Load training data", 'd'));
-        mainmis.add(new SaveModel("Save model", 's'));//TODO needs hasModel
-        mainmis.add(new LoadModel("Load model", 'm'));
+        mainmis.add(new SaveModel("Save model", 's'));//TODO needs hasModel -- in method now?
+        mainmis.add(new LoadModel("Load model", 'l'));
         //mainmis.add(new MenuItem("Change classifier type", 'c'));
-        mainmis.add(new BuildModel("Train classifier on data", 'y'));
+        mainmis.add(new BuildModel("Build model with training data", 'y'));
         mainmis.add(new MenuItem("Exit", 'e'));
-        mainmis.get(mainmis.size()-1).command = new Command() {
+        mainmis.get(mainmis.size() - 1).command = new Command() {
             @Override
             public void execute(Object data) {
-                //running = false;
+                running = false;
                 //TODO fix stopping
             }
         };
@@ -138,15 +144,15 @@ public class Main {
         tdmis.add(new MenuItem("Set to record n seconds", 'o'));
         tdmis.add(new MenuItem("Set to record until keypress", 'i'));
         tdmis.add(new MenuItem("Save Current Recording", 's')); // include has data flag?
-        mainmis.get(mainmis.size()-1).command = new Command() {
+        tdmis.get(tdmis.size() - 1).command = new Command() {
             @Override
             public void execute(Object data) {
                 System.out.println("Saving last recorded data");
                 leapSensor.SaveRecording();
-                }
+            }
         };
         tdmis.add(new MenuItem("Clear Current Recording", 'c'));// TODO: needs leapSensor.HasData();
-        mainmis.get(mainmis.size()-1).command = new Command() {
+        tdmis.get(tdmis.size() - 1).command = new Command() {
             @Override
             public void execute(Object data) {
                 System.out.println("Clearing last recorded data");
@@ -154,14 +160,14 @@ public class Main {
             }
         };
         tdmis.add(new MenuItem("Stop Recording training data", 't'));
-        mainmis.get(mainmis.size()-1).command = new Command() {
+        tdmis.get(tdmis.size() - 1).command = new Command() {
             @Override
             public void execute(Object data) {
                 leapSensor = (LeapSensor) data;//TODO pass by reference?
                 System.out.println("Finishing recording of training data");
                 leapSensor.FinishDataFile();
                 isRecordingTrainingData = false;
-                trainingDataLoc = leapSensor.savePath;
+                //trainingDataLoc = leapSensor.savePath;
                 // TODO: delete file if empty (and better names)
                 //TODO auto stop if not connected?
             }
@@ -216,17 +222,24 @@ public class Main {
             char s = sIn.toLowerCase().charAt(0);
 
             // Check input
+            boolean found = false;
             // check main menu 
             for (int i = 0; i < mainmis.size(); i++) {
-                if (mainmis.get(i).IsAvailable(isConnected)) {
-                    mainmis.get(i).execute(null);
+                MenuItem mm = mainmis.get(i);
+                if (mm.IsAvailable(isConnected) && mm.Check(s)) {
+                    mm.Run(null);
+                    found = true;
+                    break;
                 }
             }
             // check training data 
-            if (isRecordingTrainingData) {
+            if (isRecordingTrainingData && !found) {
                 for (int i = 0; i < tdmis.size(); i++) {
-                    if (tdmis.get(i).IsAvailable(isConnected)) {
-                        tdmis.get(i).execute(null);
+                    MenuItem tm = tdmis.get(i);
+                    if (tm.IsAvailable(isConnected) && tm.Check(s)) {
+                        tm.Run(null);
+                        found = true;
+                        break;
                     }
                 }
             }
@@ -266,10 +279,20 @@ public class Main {
             //         framesToRecord = n;
             //         System.out.println("Will record for " + framesToRecord + " frames.");
             //     }
+            //TODO: look into clearing console
+            if (running) {
+                System.out.print("\n");
+                for (int i = 0; i < 3; i++) {
+                    System.out.print(".");
+                    try {
+                        Thread.sleep(1000);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+                System.out.print("\n------------------------------------------------------------------\n");
+            }
         }
-        //TODO: look into clearing console
-        System.out.println("---------------------");
-        Thread.sleep(10);
     }
 
     public static class RecordTestData extends MenuItem {
@@ -304,6 +327,7 @@ public class Main {
             leapSensor.ClearRecording();
         }
     }
+
     public static class RecordMode extends MenuItem {
 
         public RecordMode(String promptname, char keycode, boolean isForKeyPress) {
@@ -318,22 +342,31 @@ public class Main {
             // TODO
         }
     }
+
     public static class SaveModel extends MenuItem {
 
         public SaveModel(String promptname, char keycode) {
             super(promptname, keycode);
         }
+
         @Override
         public void execute(Object data) {
+            if (!hasModel) {
+                System.out.print("There is no model to save!");
+                return;
+            }
             LocalDateTime date = LocalDateTime.now();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("kkmmss_ddMMyy");//hourminutesecond_daymonthyear
             String text = date.format(formatter);
+            String modelSavePath = saveLoc + "m_" + text + ".model";
+            System.out.printf("Saving model to %s...", modelSavePath);
             try {
-                weka.core.SerializationHelper.write(saveLoc + "m_" + text + ".model", classifier);
+                weka.core.SerializationHelper.write(modelSavePath, classifier);
             } catch (Exception e) {
                 e.printStackTrace();
                 return;
             }
+            System.out.println("Model Saved!");
         }
     }
 
@@ -342,17 +375,20 @@ public class Main {
         public LoadModel(String promptname, char keycode) {
             super(promptname, keycode);
         }
+
         @Override
         public void execute(Object data) {
-            System.out.println("Enter Model Location: " + saveLoc);
+            System.out.print("Enter Model Location: " + saveLoc);
             String fileLoc = saveLoc;
             fileLoc += scanner.next();
+            System.out.printf("Loading model from %s...", fileLoc);
             try {
                 classifier = (Classifier) weka.core.SerializationHelper.read(fileLoc);
             } catch (Exception e) {
                 e.printStackTrace();
                 return;
             }
+            System.out.println("Model Loaded!");
         }
     }
 
@@ -361,21 +397,12 @@ public class Main {
         public LoadTrainingData(String promptname, char keycode) {
             super(promptname, keycode);
         }
+
         @Override
         public void execute(Object data) {
-            System.out.println("Enter Training Data Location: ../savedata/trainingdata/");
-            String fileLoc = "../savedata/trainingdata/";
+            System.out.print("Enter Training Data Location: " + saveLoc);
+            String fileLoc = saveLoc;
             fileLoc += scanner.next();
-            // TODO: shortcut for ../savedata/td
-            // (\"...\" to use last location)");
-            //        if (fileLoc.trim() == "...") {
-            //            if (trainingDataLoc != "") {
-            //                fileLoc = trainingDataLoc;
-            //            } else {
-            //              System.out.println("no last location!");
-            //              fileLoc = "";
-            //            }
-            //        }
             System.out.println("loading file at:" + fileLoc);
             try {
                 DataSource src = new DataSource(fileLoc);
@@ -407,6 +434,7 @@ public class Main {
         public BuildModel(String promptname, char keycode) {
             super(promptname, keycode);
         }
+
         @Override
         public void execute(Object data) {
             // Create Model
@@ -426,6 +454,10 @@ public class Main {
                 System.out.println(summ);
             } catch (Exception e) {
                 e.printStackTrace();
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
             }
             System.out.println("Finished training the model");
             // classifier.getCapabilities() instead of
@@ -462,7 +494,7 @@ public class Main {
                 signNames[0] = scanner.next();
             }
             for (int i = 0; i < numSigns; i++) {
-                RecordIn(signNames[i], framesToRecord, 3);
+                RecordIn(signNames[i], framesToRecord, 1);
                 leapSensor.SaveRecording();
                 // TODO: give chance to retry
                 //            if (false) {
@@ -533,6 +565,11 @@ public class Main {
             if (!gotFrame) {
                 framesLeft++;
                 System.out.println("Hand not detected! No data recorded.");
+                while (leapSensor.HandAvailable(controller.frame())) {
+
+                    Thread.sleep(100);
+                    System.out.println("Hand not detected! No data recorded.");
+                }
             } else {
                 if (nframes >= 100 && framesLeft % 10 == 0) {
                     System.out.println("frame " + (nframes - framesLeft));

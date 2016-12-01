@@ -107,6 +107,10 @@ public class LeapSensor {
             return true;
         }
     }
+    public boolean HandAvailable(Frame frame) {
+        Hand hand = frame.hands().frontmost();
+        return hand.isValid();
+    }
 
     // start recording with the leap
     public void StartRecording(String signLabel) {
