@@ -1,1 +1,1 @@
-java -Djava.library.path="..\deps\LeapSDK\lib\x64" -jar "..\program\dist\leapWekaASLTest.jar"
+java -Djava.library.path="..\deps\LeapSDK\lib\x64" -jar "..\program\dist\ASLToVoice.jar"

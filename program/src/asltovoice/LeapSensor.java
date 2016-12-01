@@ -1,4 +1,4 @@
-package leapwekaasl;
+package asltovoice;
 
 import com.leapmotion.leap.*;
 import java.io.File;
@@ -107,6 +107,10 @@ public class LeapSensor {
             return true;
         }
     }
+    public boolean HandAvailable(Frame frame) {
+        Hand hand = frame.hands().frontmost();
+        return hand.isValid();
+    }
 
     // start recording with the leap
     public void StartRecording(String signLabel) {
@@ -145,11 +149,11 @@ public class LeapSensor {
         return !records.isEmpty();
     }
 
-    public void StartDataFile(boolean isTrainingData) throws FileNotFoundException {
+    public void StartDataFile(boolean isTrainingData, String saveLoc) throws FileNotFoundException {
         LocalDateTime date = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("kkmmss_ddMMyy");//hourminutesecond_daymonthyear
         String text = date.format(formatter);
-        String fname = "..\\savedata\\trainingdata\\";
+        String fname = saveLoc;
         if (isTrainingData) {
             fname += "td_";
         }
@@ -158,8 +162,8 @@ public class LeapSensor {
         savePath = fname;
         rid = 0;
         totalId = 0;
-        System.out.println("New file is ");
-        System.out.println("_" + fname);
+        System.out.println("New file is: ");
+        System.out.println(fname);
         openFile = new PrintWriter(new File(fname));
         isFileOpen = true;
         StringBuilder sb = new StringBuilder();
