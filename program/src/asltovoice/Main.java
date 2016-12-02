@@ -13,10 +13,14 @@ import weka.core.DenseInstance;
 
 import java.util.Scanner;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Main {
 
@@ -119,6 +123,22 @@ public class Main {
         mainmis.add(new LoadModel("Load model", 'l'));
         //mainmis.add(new MenuItem("Change classifier type", 'c'));
         mainmis.add(new BuildModel("Build model with training data", 'b'));
+        mainmis.add(new MenuItem("LoopTestData", 'o'));
+        mainmis.get(mainmis.size() - 1).command = (Object data) -> {
+            RecordTestData m = new RecordTestData("Record new test data", 'n');
+            scanner.useDelimiter("\n");
+            while (true) {
+                System.out.print("\n>");
+                int ch = 0;
+                String sIn = scanner.next().toLowerCase();
+                char s = sIn.charAt(0);
+                if (s == 'e') {
+                    running = false;
+                    break;
+                }
+                m.Run(data);
+            }
+        };
         mainmis.add(new MenuItem("Exit", 'e'));
         mainmis.get(mainmis.size() - 1).command = (Object data) -> {
             running = false;
@@ -192,9 +212,9 @@ public class Main {
 
             // get input
             String sIn = "_";
-            if (scanner.hasNext()) {
-                sIn = scanner.next();
-            }
+            //if (scanner.hasNext()) {
+            sIn = scanner.next();
+            //}
             char s = sIn.toLowerCase().charAt(0);
 
             // Check input
@@ -225,9 +245,9 @@ public class Main {
 
             // wait for next command
             //TODO: look into clearing console
-            if (running) {
+            if (running && found) {
                 System.out.print("\n");
-                for (int i = 0; i < 3; i++) {
+                for (int i = 0; i < 2; i++) {
                     System.out.print(".");
                     try {
                         Thread.sleep(1000);
@@ -235,8 +255,8 @@ public class Main {
                         e.printStackTrace();
                     }
                 }
-                System.out.print("\n------------------------------------------------------------------\n");
             }
+            System.out.print("\n------------------------------------------------------------------\n");
         }
     }
 
@@ -249,9 +269,11 @@ public class Main {
         @Override
         public void execute(Object data) {
             if (hasModel) {
-                RecordIn("_", framesToRecord, 3);
-                System.out.println("Analysing recorded data...");
+                RecordIn("_", framesToRecord, 1);
+                //System.out.println("\007");
+                System.out.println("\nAnalysing recorded data...");
                 DenseInstance di = new DenseInstance(trainingData.numAttributes());
+                //classifier.getCapabilities().
                 //get new values into array
                 // LoadValues() ?
                 for (int i = 0; i < di.numAttributes(); i++) {
@@ -261,7 +283,22 @@ public class Main {
                 di.setDataset(trainingData);
                 try {
                     double n = classifier.classifyInstance(di);
-                    System.out.println("The sign you signed is " + n + ".");
+                    System.out.print("The sign you signed is: \n");
+                    Thread.sleep(1000);
+                    System.out.print(">" + (int)n + "<\n");
+                    Thread.sleep(1000);
+//                    double[] ns = classifier.distributionForInstance(di);
+//                    System.out.print("Accuracy:\n");
+//                    for(int i=0;i<10;i++) {// only works with the numbers
+//                        if (i==(int)n) {
+//                            System.out.print(">");
+//                        } else {
+//                            System.out.print("");
+//                        }
+//                        System.out.print((int)i + ": ");
+//                        System.out.printf("%.3f", ns[i]);
+//                        System.out.print("%\n");
+//                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                     return;
@@ -341,7 +378,8 @@ public class Main {
                 e.printStackTrace();
                 return;
             }
-            System.out.println("Model Loaded!");
+            hasModel = true;
+            System.out.println("\nModel Loaded!");
         }
     }
 
@@ -463,7 +501,9 @@ public class Main {
         if (leapSensor.HasData()) {
             leapSensor.SaveRecording();
         }
-        System.out.println("\nSign " + sign);
+        if (sign != "_") {
+            System.out.println("\nSign " + sign);
+        }
         if (delay > 1) {
             for (int i = 0; i < delay; i++) {
                 System.out.println((delay - i) + "...");
@@ -484,18 +524,22 @@ public class Main {
 
     public static void Record(String sign, int nframes) throws IOException, InterruptedException {
         // pass in "" to record non-labelled
+        if (sign != "_") {
         if (nframes == 0) {
             System.out.println("Press Enter to stop recording");
         } else {
-            System.out.println("Recording for " + nframes + ", or " + ((float) nframes / POLLRATE) + " seconds.");
-        }
+            System.out.println("Recording for " + nframes + " frames");//, or " + ((float) nframes / POLLRATE) + " seconds.");
+        }}
         leapSensor.ClearRecording();
         leapSensor.StartRecording(sign); // replace with some sign
         // TODO: recording mode (n frames, n sec, until press, until detected stop)
         long timeSinceStart = System.currentTimeMillis();
         //long dt = 0, frameStart = 0;
-
-        System.out.println("Recording " + sign);
+        if (sign != "_") {
+            System.out.println("Recording " + sign);
+        } else { 
+            System.out.println("Recording ");
+        }
         int framesLeft = nframes + 1;
         boolean exit = false;
         while (!exit) {
@@ -516,11 +560,11 @@ public class Main {
             if (!gotFrame) {
                 framesLeft++;
                 System.out.println("Hand not detected! No data recorded.");
-                while (leapSensor.HandAvailable(controller.frame())) {
-
+                while (!leapSensor.HandAvailable(controller.frame())) {
+                    System.out.print(".");
                     Thread.sleep(100);
-                    System.out.println("Hand not detected! No data recorded.");
                 }
+                System.out.print("\n");
             } else {
                 if (nframes >= 100 && framesLeft % 10 == 0) {
                     System.out.println("frame " + (nframes - framesLeft));
@@ -529,10 +573,15 @@ public class Main {
             }
             long dt = System.currentTimeMillis() - frameStart; // time that this update took
             long timeLeftThisFrame = POLLRATE - dt;
+            if (timeLeftThisFrame < 0) {
+                timeLeftThisFrame = 0;
+            }
             Thread.sleep(timeLeftThisFrame);// sleep for updates/sec-dt
         }
         leapSensor.StopRecording();
-        System.out.println("Stopped recording");
+        
+        System.out.println("Done recording");
+        
     }
 
     public static boolean Update() {
