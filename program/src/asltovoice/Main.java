@@ -287,6 +287,7 @@ public class Main {
                     Thread.sleep(1000);
                     System.out.print(">" + (int)n + "<\n");
                     Thread.sleep(1000);
+                    //TODO: get accuracy
 //                    double[] ns = classifier.distributionForInstance(di);
 //                    System.out.print("Accuracy:\n");
 //                    for(int i=0;i<10;i++) {// only works with the numbers
@@ -483,7 +484,7 @@ public class Main {
                 signNames[0] = scanner.next();
             }
             for (int i = 0; i < numSigns; i++) {
-                RecordIn(signNames[i], framesToRecord, 1);
+                RecordIn(signNames[i], framesToRecord, 3);
                 leapSensor.SaveRecording();
                 // TODO: give chance to retry
                 //            if (false) {
@@ -492,6 +493,7 @@ public class Main {
                 //                i--;
                 //            } else {
                 //            }
+                // TODO: remove last few frames if record mode is keypress?
             }
             System.out.println("All signs recorded");
         }
@@ -525,11 +527,12 @@ public class Main {
     public static void Record(String sign, int nframes) throws IOException, InterruptedException {
         // pass in "" to record non-labelled
         if (sign != "_") {
-        if (nframes == 0) {
-            System.out.println("Press Enter to stop recording");
-        } else {
-            System.out.println("Recording for " + nframes + " frames");//, or " + ((float) nframes / POLLRATE) + " seconds.");
-        }}
+            if (nframes == 0) {
+                System.out.println("Press Enter to stop recording");
+            } else {
+                System.out.println("Recording for " + nframes + " frames");//, or " + ((float) nframes / POLLRATE) + " seconds.");
+            }
+        }
         leapSensor.ClearRecording();
         leapSensor.StartRecording(sign); // replace with some sign
         // TODO: recording mode (n frames, n sec, until press, until detected stop)
@@ -544,10 +547,18 @@ public class Main {
         boolean exit = false;
         while (!exit) {
             long frameStart = System.currentTimeMillis();
-            if (nframes == 0) {
-                if (System.in.available() > 0) {
-                    exit = true;
-                    break;
+            if (nframes <= 0) {
+                if (nframes == 0) {
+                    if (System.in.available() > 0) {
+                        exit = true;
+                        break;
+                    }
+                } else {
+                    // TODO: record mode for no hands
+                    if (System.in.available() > 0) {
+                        exit = true;
+                        break;
+                    }
                 }
             } else {
                 framesLeft--;
