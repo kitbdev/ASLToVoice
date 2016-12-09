@@ -125,7 +125,7 @@ public class Main {
         mainmis.add(new BuildModel("Build model with training data", 'b'));
         mainmis.add(new MenuItem("LoopTestData", 'o'));
         mainmis.get(mainmis.size() - 1).command = (Object data) -> {
-            RecordTestData m = new RecordTestData("Record new test data", 'n');
+            RecordTestData m = new RecordTestData("Record new test data", '_');
             scanner.useDelimiter("\n");
             while (true) {
                 System.out.print("\n>");
@@ -145,7 +145,7 @@ public class Main {
         };
 
         // training data menu items
-        tdmis.add(new RecordSigns("Start Recording with new label", 'n', false));
+        tdmis.add(new RecordSigns("Start Recording with new label", 'i', false));
         //tdmis.add(new RecordSigns("Start Recording with same label", 'r', false));
         tdmis.add(new RecordSigns("Start Recording Sequence of classes", 'q', true));
         tdmis.add(new RecordMode("Set to record n frames", 'f'));

@@ -32,68 +32,31 @@ public class LeapSensor {
     public boolean ProcessFrame(Frame frame) {
         if (recording) {
             if (lastFrameID != frame.id()) {
-                // TODO: multiple hands
-                //HandList hands = frame.hands();
-                Hand hand = frame.hands().frontmost();
-                if (hand.isValid()) {
-                    if (hand.isLeft()) {
-                        // flip it?
-                    }
-                    //PointableList pointables = frame.pointables();
-                    //ToolList tools = frame.tools();
+                HandList hands = frame.hands();
+                if (hands.count() > 0) {
                     // add time since start frame
                     long dNano = System.nanoTime() - recordStartTimeN;
                     timeRecords.add(dNano);
-                    // currently arm, hand, and finger pos rot and vel
-                    Arm arm = hand.arm();
-                    if (!arm.isValid()) {
-                        // uh oh
-                        System.out.println("ERROR: NO ARM DETECTED");
-                    }
-                    Vector armPos = arm.elbowPosition();
-                    records.add(armPos.getX());
-                    records.add(armPos.getY());
-                    records.add(armPos.getZ());
-                    Vector armDir = arm.direction();
-                    records.add(armDir.getX());
-                    records.add(armDir.getY());
-                    records.add(armDir.getZ());
-                    // no arm velocity
-
-                    // hand
-                    Vector handPos = hand.palmPosition();
-                    records.add(handPos.getX());
-                    records.add(handPos.getY());
-                    records.add(handPos.getZ());
-                    Vector handDir = hand.direction();
-                    records.add(handDir.getX());
-                    records.add(handDir.getY());
-                    records.add(handDir.getZ());
-                    Vector handVel = hand.palmVelocity();
-                    records.add(handVel.getX());
-                    records.add(handVel.getY());
-                    records.add(handVel.getZ());
-
-                    // fingers
-                    FingerList fingers = hand.fingers();
-                    for (int i = 0; i < 5; i++) {
-                        Finger f = fingers.get(i);
-                        // finger pos relative to hand
-                        Vector fPos = f.tipPosition().minus(handPos);
-                        records.add(fPos.getX());
-                        records.add(fPos.getY());
-                        records.add(fPos.getZ());
-                        Vector fDir = f.direction();
-                        if (fDir.getX() == 0.0f){
-                            System.out.println("fdir is zero!");
+                    // add right hand then left hand to records, 0s if not available
+                    Hand hand = hands.get(0);
+                    if (hand.isRight()) {
+                        // this is the right hand
+                        RecordHand(hand);
+                        if(hands.count() > 1) {
+                            Hand lhand = hands.get(1);
+                            RecordHand(lhand);
+                        } else {
+                            RecordHand(null);
                         }
-                        records.add(fDir.getX());
-                        records.add(fDir.getY());
-                        records.add(fDir.getZ());
-                        Vector fVel = f.tipVelocity();
-                        records.add(fVel.getX());
-                        records.add(fVel.getY());
-                        records.add(fVel.getZ());
+                    } else {
+                        // this is the left hand
+                        if(hands.count() > 1) {
+                            Hand rhand = hands.get(1);
+                            RecordHand(rhand);
+                        } else {
+                            RecordHand(null);
+                        }
+                        RecordHand(hand);
                     }
                     numFrames++;
                 }
@@ -101,10 +64,64 @@ public class LeapSensor {
         }
         lastFrameID = frame.id();
         //System.out.println("f"+numFrames);
-        if (numFrames==0) {
-            return false;
+        return numFrames != 0;
+    }
+    void RecordHand(Hand hand) {
+        if (hand==null) {
+            // there are 60 records added
+            for (int i=0; i<60; i++) {
+                records.add(0f);
+            }
+            return;
+        }
+        // currently arm, hand, and finger pos rot and vel
+        Arm arm = hand.arm();
+        if (!arm.isValid()) {
+            for (int i=0; i<6; i++) {
+                records.add(0f);
+            }
         } else {
-            return true;
+            Vector armPos = arm.elbowPosition();
+            records.add(armPos.getX());
+            records.add(armPos.getY());
+            records.add(armPos.getZ());
+            Vector armDir = arm.direction();
+            records.add(armDir.getX());
+            records.add(armDir.getY());
+            records.add(armDir.getZ());
+            // no arm velocity
+        }
+        // hand
+        Vector handPos = hand.palmPosition();
+        records.add(handPos.getX());
+        records.add(handPos.getY());
+        records.add(handPos.getZ());
+        Vector handDir = hand.direction();
+        records.add(handDir.getX());
+        records.add(handDir.getY());
+        records.add(handDir.getZ());
+        Vector handVel = hand.palmVelocity();
+        records.add(handVel.getX());
+        records.add(handVel.getY());
+        records.add(handVel.getZ());
+
+        // fingers
+        FingerList fingers = hand.fingers();
+        for (int i = 0; i < 5; i++) {
+            Finger f = fingers.get(i);
+            // finger pos relative to hand
+            Vector fPos = f.tipPosition().minus(handPos);
+            records.add(fPos.getX());
+            records.add(fPos.getY());
+            records.add(fPos.getZ());
+            Vector fDir = f.direction();
+            records.add(fDir.getX());
+            records.add(fDir.getY());
+            records.add(fDir.getZ());
+            Vector fVel = f.tipVelocity();
+            records.add(fVel.getX());
+            records.add(fVel.getY());
+            records.add(fVel.getZ());
         }
     }
     public boolean HandAvailable(Frame frame) {
@@ -114,10 +131,6 @@ public class LeapSensor {
 
     // start recording with the leap
     public void StartRecording(String signLabel) {
-        if (!isFileOpen) {
-            //System.out.println("start a file first!");
-            //return;
-        }
         recording = true;
         lastFrameID = 0;
         ClearRecording();
@@ -173,10 +186,15 @@ public class LeapSensor {
         sb.append("cur_frame,");
         // TODO: relative time? time since last frame
         sb.append("total_frames,");
-        AddPosRot(sb, "arm");
-        AddPosRotVel(sb, "hand");
+        AddPosRot(sb, "rarm");
+        AddPosRotVel(sb, "rhand");
         for (int i = 1; i <= 5; i++) {
-            AddPosRotVel(sb, "finger" + i);
+            AddPosRotVel(sb, "rfinger" + i);
+        }
+        AddPosRot(sb, "larm");
+        AddPosRotVel(sb, "lhand");
+        for (int i = 1; i <= 5; i++) {
+            AddPosRotVel(sb, "lfinger" + i);
         }
         if (isTrainingData) {
             sb.append("sign");
