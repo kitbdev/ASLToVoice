@@ -161,17 +161,25 @@ public class LeapSensor {
     public boolean HasData() {
         return !records.isEmpty();
     }
-
     public void StartDataFile(boolean isTrainingData, String saveLoc) throws FileNotFoundException {
-        LocalDateTime date = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("kkmmss_ddMMyy");//hourminutesecond_daymonthyear
-        String text = date.format(formatter);
-        String fname = saveLoc;
-        if (isTrainingData) {
-            fname += "td_";
+        StartDataFile(isTrainingData, saveLoc, "_");
+    }
+    public void StartDataFile(boolean isTrainingData, String saveLoc, String filename) throws FileNotFoundException {
+        String fname = "";
+        if (filename=="_") {
+            LocalDateTime date = LocalDateTime.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("kkmmss_ddMMyy");//hourminutesecond_daymonthyear
+            String text = date.format(formatter);
+            fname = saveLoc;
+            if (isTrainingData) {
+                fname += "td_";
+            }
+            // TODO: add types of classes to path?
+            fname += text + ".csv";
         }
-        // TODO: add types of classes to path?
-        fname += text + ".csv";
+        else {
+            fname = filename;
+        }
         savePath = fname;
         rid = 0;
         totalId = 0;

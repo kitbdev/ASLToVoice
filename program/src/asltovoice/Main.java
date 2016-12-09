@@ -112,7 +112,11 @@ public class Main {
         mainmis.get(mainmis.size() - 1).command = (Object data) -> {
             isRecordingTrainingData = true;
             try {
-                leapSensor.StartDataFile(true, saveLoc);
+                String sIn = scanner.next().toLowerCase();
+                if (!sIn.contains(".csv")) {
+                    sIn = "_";
+                }
+                leapSensor.StartDataFile(true, saveLoc, sIn);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
@@ -484,15 +488,14 @@ public class Main {
                 signNames[0] = scanner.next();
             }
             for (int i = 0; i < numSigns; i++) {
-                RecordIn(signNames[i], framesToRecord, 3);
-                leapSensor.SaveRecording();
-                // TODO: give chance to retry
-                //            if (false) {
-                //                // redo
-                //                leapSensor.ClearRecording();
-                //                i--;
-                //            } else {
-                //            }
+                RecordIn(signNames[i], framesToRecord, 1);
+                char n = scanner.next().charAt(0);
+                if (n=='c') {
+                    leapSensor.ClearRecording();
+                    i--;
+                }else {
+                    leapSensor.SaveRecording();
+                }
                 // TODO: remove last few frames if record mode is keypress?
             }
             System.out.println("All signs recorded");
