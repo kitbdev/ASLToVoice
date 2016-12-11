@@ -99,26 +99,18 @@ public class Main {
         List<MenuItem> mainmis = new ArrayList<>();
         List<MenuItem> tdmis = new ArrayList<>();
         // main menu items
-        mainmis.add(new MenuItem("Record training data", 'r'));
-        mainmis.get(mainmis.size() - 1).needsController = true;
-        mainmis.get(mainmis.size() - 1).command = (Object data) -> {
-            isRecordingTrainingData = true;
-            try {
-                String sIn = scanner.next().toLowerCase();
-                if (!sIn.contains(".csv")) {
-                    sIn = "_";
-                }
-                leapSensor.StartDataFile(true, saveLoc, sIn);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-        };
-        mainmis.add(new RecordTestData("Record new test data", 'n'));//TODO needs !trainingData.isEmpty() and hasModel?
+        mainmis.add(new RecordTrainingData("Record training data", 'r'));
+        //TODO needs !trainingData.isEmpty() and hasModel?
+        mainmis.add(new RecordTestData("Record and classify new test data", 'n'));
+        mainmis.add(new ClassifyData("classify new test data", 'a'));
         mainmis.add(new LoadTrainingData("Load training data", 'd'));
         mainmis.add(new SaveModel("Save model", 's'));//TODO needs hasModel -- in method now?
         mainmis.add(new LoadModel("Load model", 'l'));
         //mainmis.add(new MenuItem("Change classifier type", 'c'));
-        mainmis.add(new BuildModel("Build model with training data", 'b'));
+        mainmis.add(new MenuItem("Build model with training data", 'b'));
+        mainmis.get(mainmis.size() - 1).command = (Object data) -> {
+            ml.BuildModel();
+        };
         mainmis.add(new MenuItem("LoopTestData", 'o'));
         mainmis.get(mainmis.size() - 1).command = (Object data) -> {
             RecordTestData m = new RecordTestData("Record new test data", '_');
@@ -266,24 +258,42 @@ public class Main {
         public void execute(Object data) {
             if (ml.hasModel) {
                 RecordIn("_", framesToRecord, 1);
-                float[] lastRecording = new float[ml.trainingData.numAttributes()];
-                //System.out.println("\007");
                 System.out.println("\nAnalysing recorded data...");
-                //get new values into array
-                // LoadValues() ?
+                // get new values into array
+                double[] lastRecording = new double[ml.trainingData.numAttributes()];
+                //TODO: get data over time
                 for (int i = 0; i < ml.trainingData.numAttributes(); i++) {
-                    lastRecording[i] = leapSensor.LoadDataAt(i);
+                    lastRecording[i] = (double)leapSensor.LoadDataAt(i);
                 }
-                
                 ml.Classify(lastRecording);
-                
             } else {
-                System.out.println("No model!");
+                System.out.println("Buid model first");
             }
             leapSensor.ClearRecording();
         }
     }
+    
+     public static class ClassifyData extends MenuItem {
+        public ClassifyData(String promptname, char keycode) {
+            super(promptname, keycode);
+            needsController = true;
+        }
 
+        @Override
+        public void execute(Object data) {
+            if (ml.hasModel) {
+                System.out.print("Enter Data Location: " + saveLoc);
+                String fileLoc = saveLoc;
+                fileLoc += scanner.next();
+                
+                ml.Classify(fileLoc);
+            } else {
+                System.out.println("Buid model first");
+            }
+            leapSensor.ClearRecording();
+        }
+    }
+    
     public static class RecordMode extends MenuItem {
         //boolean inSeconds;
         public RecordMode(String promptname, char keycode) {
@@ -363,16 +373,25 @@ public class Main {
         }
     }
 
-    public static class BuildModel extends MenuItem {
+    public static class RecordTrainingData extends MenuItem {
 
-        public BuildModel(String promptname, char keycode) {
+        public RecordTrainingData(String promptname, char keycode) {
             super(promptname, keycode);
+            needsController = true;
         }
 
         @Override
         public void execute(Object data) {
-            // Create Model
-            ml.BuildModel();
+            isRecordingTrainingData = true;
+            try {
+                String sIn = scanner.next().toLowerCase();
+                if (!sIn.contains(".csv")) {
+                    sIn = "_";
+                }
+                leapSensor.StartDataFile(true, saveLoc, sIn);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
         }
     }
 
