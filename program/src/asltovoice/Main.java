@@ -3,6 +3,7 @@ package asltovoice;
 import com.leapmotion.leap.*;
 import java.io.FileNotFoundException;
 
+//TODO: move weka stuff to ml class
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
 import weka.classifiers.trees.J48;
