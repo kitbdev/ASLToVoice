@@ -2,6 +2,7 @@ package asltovoice;
      
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 public class MachineLearning {
@@ -16,10 +17,8 @@ public class MachineLearning {
             }
         }
         // find nearest k points
-        //List<float[]> nearestK = new ArrayList();
-        //int[] nearestKIndexes = new int[k];
-        int[] nearestKClasses = new int[k];
         float[] nearestKDistances = new float[k];
+        HashMap<Integer, Integer> classAmounts = new HashMap<Integer, Integer>();
         for (int i=0; i<k; i++) {
             nearestKDistances[i] = 9999999;
             int nearestIndex = -1;
@@ -30,11 +29,20 @@ public class MachineLearning {
                     distances[j] = 9999999;
                 }
             }
-            nearestKClasses[i] = dataClasses[nearestIndex];
+            int kNearestClass = dataClasses[nearestIndex];
+            // add one to the current amount of that key
+            //classAmounts.putIfAbsent(kNearestClass, 0);
+            classAmounts.put(kNearestClass, classAmounts.getOrDefault(kNearestClass, 0)+1);
         }
         // return the majority class index of the nearest k
-        Arrays.sort(nearestKClasses);
-        int majorityClass = nearestKClasses[k / 2];
+        int majorityClass = -1;
+        int majorityAmount = -1;
+        for(HashMap.Entry<Integer, Integer> entry : classAmounts.entrySet()) {
+            if (entry.getValue() > majorityAmount) {
+                majorityAmount = entry.getValue();
+                majorityClass = entry.getKey();
+            }
+        }
         return majorityClass;
     }
 }
