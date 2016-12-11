@@ -104,8 +104,8 @@ public class Main {
         mainmis.add(new RecordTestData("Record and classify new test data", 'n'));
         mainmis.add(new ClassifyData("classify new test data", 'a'));
         mainmis.add(new LoadTrainingData("Load training data", 'd'));
-        mainmis.add(new SaveModel("Save model", 's'));//TODO needs hasModel -- in method now?
-        mainmis.add(new LoadModel("Load model", 'l'));
+        //mainmis.add(new SaveModel("Save model", 's'));//TODO needs hasModel -- in method now?
+        //mainmis.add(new LoadModel("Load model", 'l'));
         //mainmis.add(new MenuItem("Change classifier type", 'c'));
         mainmis.add(new MenuItem("Build model with training data", 'b'));
         mainmis.get(mainmis.size() - 1).command = (Object data) -> {
@@ -163,7 +163,7 @@ public class Main {
         while (running) {
             isConnected = controller.isConnected();
             System.out.print("\n");
-            System.out.println("Classifier: " + ml.classifier.toString());
+            //System.out.println("Classifier: " + ml.classifier.toString());
             if (isConnected) {
                 System.out.println("CONNECTED");
             } else {
@@ -256,7 +256,7 @@ public class Main {
 
         @Override
         public void execute(Object data) {
-            if (ml.hasModel) {
+            if (ml.HasModel()) {
                 RecordIn("_", framesToRecord, 1);
                 System.out.println("\nAnalysing recorded data...");
                 // get new values into array
@@ -276,12 +276,12 @@ public class Main {
      public static class ClassifyData extends MenuItem {
         public ClassifyData(String promptname, char keycode) {
             super(promptname, keycode);
-            needsController = true;
+            needsController = false;
         }
 
         @Override
         public void execute(Object data) {
-            if (ml.hasModel) {
+            if (ml.HasModel()) {
                 System.out.print("Enter Data Location: " + saveLoc);
                 String fileLoc = saveLoc;
                 fileLoc += scanner.next();
@@ -325,7 +325,7 @@ public class Main {
 
         @Override
         public void execute(Object data) {
-            if (!ml.hasModel) {
+            if (!ml.HasModel()) {
                 System.out.print("There is no model to save!");
                 return;
             }

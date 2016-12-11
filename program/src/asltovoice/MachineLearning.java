@@ -14,12 +14,16 @@ import weka.core.converters.ConverterUtils;
 
 public class MachineLearning {
 
-    public static Classifier classifier;
-    public static Instances trainingData = null;
+    public Classifier classifier;
+    public Instances trainingData = null;
     //classifier = new J48();
     //classifier = new IBk();
-    public static boolean hasModel = false;
+    boolean hasModel = false;
 
+    boolean HasModel() {
+        return hasModel;
+    }
+    
     void LoadTrainingData(String fileLoc) {
         try {
             ConverterUtils.DataSource src = new ConverterUtils.DataSource(fileLoc);
@@ -92,9 +96,8 @@ public class MachineLearning {
             System.out.print("The sign you signed is: \n");
             System.out.print("MLP>" + trainingData.classAttribute().value(mlpclass) + "<\n");
             System.out.print("KNN>" + trainingData.classAttribute().value(knnclass) + "<\n");
-            
-            //TODO: get accuracy
-            System.out.print("di.str" + di.toString() + " \n");            
+            System.out.print("TODO: accuracy \n");            
+            //TODO: get accuracy           
         } catch (Exception e) {
             e.printStackTrace();
             return;
@@ -102,7 +105,7 @@ public class MachineLearning {
     }
 
     public void BuildModel() {
-        System.out.println("Building Model with " + classifier.toString() + "...");
+        System.out.println("Building Model with Multilayer Perceptron...");// + classifier.toString() + "...");
         // TODO: check file to make sure there is enough data?
         if (trainingData == null) {
             System.out.println("No training data! Please load data with [d]");
@@ -118,6 +121,7 @@ public class MachineLearning {
             classifier = mp;
             //mp.buildClassifier(trainingData);
             classifier.buildClassifier(trainingData);
+            //TODO: do this here?
             Evaluation eval = new Evaluation(trainingData);
             eval.evaluateModel(classifier, trainingData);
             String summ = eval.toSummaryString();
