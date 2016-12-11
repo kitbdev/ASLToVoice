@@ -3,14 +3,6 @@ package asltovoice;
 import com.leapmotion.leap.*;
 import java.io.FileNotFoundException;
 
-import weka.core.Instances;
-import weka.core.converters.ConverterUtils.DataSource;
-import weka.classifiers.trees.J48;
-import weka.classifiers.Classifier;
-import weka.classifiers.lazy.IBk;
-import weka.classifiers.Evaluation;
-import weka.core.DenseInstance;
-
 import java.util.Scanner;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -27,22 +19,22 @@ public class Main {
     public static Scanner scanner = new Scanner(System.in);
     public static Controller controller = new Controller();
     public static LeapSensor leapSensor = new LeapSensor();
+    public static MachineLearning ml = new MachineLearning();
 
     public static long POLLRATE = 50;//ms
     //1.0/100.0;// 1 poll every .1 seconds in ms //TODO: is this good?
-    public static Classifier classifier;
-    public static Instances trainingData = null;
+
 
     public static int framesToRecord = 10;
     public static boolean isConnected, hasRecording = false;
-    public static boolean isRecordingTrainingData = false, hasModel = false;
+    public static boolean isRecordingTrainingData = false;
+    
 
     public static String saveLoc = "../savedata/";
     public static boolean running = true;
 
     public static void main(String[] args) throws InterruptedException, IOException {
-        //classifier = new J48();
-        classifier = new IBk();
+        
         try {
             Menu();
         } catch (Exception e) {
@@ -50,7 +42,7 @@ public class Main {
         }
         System.out.println("Exiting...");
     }
-
+    
     public interface Command {
         public abstract void execute(Object data);
     }
@@ -107,26 +99,18 @@ public class Main {
         List<MenuItem> mainmis = new ArrayList<>();
         List<MenuItem> tdmis = new ArrayList<>();
         // main menu items
-        mainmis.add(new MenuItem("Record training data", 'r'));
-        mainmis.get(mainmis.size() - 1).needsController = true;
-        mainmis.get(mainmis.size() - 1).command = (Object data) -> {
-            isRecordingTrainingData = true;
-            try {
-                String sIn = scanner.next().toLowerCase();
-                if (!sIn.contains(".csv")) {
-                    sIn = "_";
-                }
-                leapSensor.StartDataFile(true, saveLoc, sIn);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-        };
-        mainmis.add(new RecordTestData("Record new test data", 'n'));//TODO needs !trainingData.isEmpty() and hasModel?
+        mainmis.add(new RecordTrainingData("Record training data", 'r'));
+        //TODO needs !trainingData.isEmpty() and hasModel?
+        mainmis.add(new RecordTestData("Record and classify new test data", 'n'));
+        mainmis.add(new ClassifyData("classify new test data", 'a'));
         mainmis.add(new LoadTrainingData("Load training data", 'd'));
         mainmis.add(new SaveModel("Save model", 's'));//TODO needs hasModel -- in method now?
         mainmis.add(new LoadModel("Load model", 'l'));
         //mainmis.add(new MenuItem("Change classifier type", 'c'));
-        mainmis.add(new BuildModel("Build model with training data", 'b'));
+        mainmis.add(new MenuItem("Build model with training data", 'b'));
+        mainmis.get(mainmis.size() - 1).command = (Object data) -> {
+            ml.BuildModel();
+        };
         mainmis.add(new MenuItem("LoopTestData", 'o'));
         mainmis.get(mainmis.size() - 1).command = (Object data) -> {
             RecordTestData m = new RecordTestData("Record new test data", '_');
@@ -179,7 +163,7 @@ public class Main {
         while (running) {
             isConnected = controller.isConnected();
             System.out.print("\n");
-            System.out.println("Classifier: " + classifier.toString());
+            System.out.println("Classifier: " + ml.classifier.toString());
             if (isConnected) {
                 System.out.println("CONNECTED");
             } else {
@@ -272,49 +256,44 @@ public class Main {
 
         @Override
         public void execute(Object data) {
-            if (hasModel) {
+            if (ml.hasModel) {
                 RecordIn("_", framesToRecord, 1);
-                //System.out.println("\007");
                 System.out.println("\nAnalysing recorded data...");
-                DenseInstance di = new DenseInstance(trainingData.numAttributes());
-                //classifier.getCapabilities().
-                //get new values into array
-                // LoadValues() ?
-                for (int i = 0; i < di.numAttributes(); i++) {
-                    di.setValue(i, leapSensor.LoadDataAt(i));
+                // get new values into array
+                double[] lastRecording = new double[ml.trainingData.numAttributes()];
+                //TODO: get data over time
+                for (int i = 0; i < ml.trainingData.numAttributes(); i++) {
+                    lastRecording[i] = (double)leapSensor.LoadDataAt(i);
                 }
-
-                di.setDataset(trainingData);
-                try {
-                    double n = classifier.classifyInstance(di);
-                    System.out.print("The sign you signed is: \n");
-                    Thread.sleep(1000);
-                    System.out.print(">" + (int)n + "<\n");
-                    Thread.sleep(1000);
-                    //TODO: get accuracy
-//                    double[] ns = classifier.distributionForInstance(di);
-//                    System.out.print("Accuracy:\n");
-//                    for(int i=0;i<10;i++) {// only works with the numbers
-//                        if (i==(int)n) {
-//                            System.out.print(">");
-//                        } else {
-//                            System.out.print("");
-//                        }
-//                        System.out.print((int)i + ": ");
-//                        System.out.printf("%.3f", ns[i]);
-//                        System.out.print("%\n");
-//                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return;
-                }
+                ml.Classify(lastRecording);
             } else {
-                System.out.println("No model!");
+                System.out.println("Buid model first");
             }
             leapSensor.ClearRecording();
         }
     }
+    
+     public static class ClassifyData extends MenuItem {
+        public ClassifyData(String promptname, char keycode) {
+            super(promptname, keycode);
+            needsController = true;
+        }
 
+        @Override
+        public void execute(Object data) {
+            if (ml.hasModel) {
+                System.out.print("Enter Data Location: " + saveLoc);
+                String fileLoc = saveLoc;
+                fileLoc += scanner.next();
+                
+                ml.Classify(fileLoc);
+            } else {
+                System.out.println("Buid model first");
+            }
+            leapSensor.ClearRecording();
+        }
+    }
+    
     public static class RecordMode extends MenuItem {
         //boolean inSeconds;
         public RecordMode(String promptname, char keycode) {
@@ -346,7 +325,7 @@ public class Main {
 
         @Override
         public void execute(Object data) {
-            if (!hasModel) {
+            if (!ml.hasModel) {
                 System.out.print("There is no model to save!");
                 return;
             }
@@ -354,14 +333,7 @@ public class Main {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("kkmmss_ddMMyy");//hourminutesecond_daymonthyear
             String text = date.format(formatter);
             String modelSavePath = saveLoc + "m_" + text + ".model";
-            System.out.printf("Saving model to %s...", modelSavePath);
-            try {
-                weka.core.SerializationHelper.write(modelSavePath, classifier);
-            } catch (Exception e) {
-                e.printStackTrace();
-                return;
-            }
-            System.out.println("Model Saved!");
+            ml.SaveModel(modelSavePath);
         }
     }
 
@@ -377,13 +349,7 @@ public class Main {
             String fileLoc = saveLoc;
             fileLoc += scanner.next();
             System.out.printf("Loading model from %s...", fileLoc);
-            try {
-                classifier = (Classifier) weka.core.SerializationHelper.read(fileLoc);
-            } catch (Exception e) {
-                e.printStackTrace();
-                return;
-            }
-            hasModel = true;
+            ml.LoadModel(fileLoc);
             System.out.println("\nModel Loaded!");
         }
     }
@@ -400,62 +366,32 @@ public class Main {
             String fileLoc = saveLoc;
             fileLoc += scanner.next();
             System.out.println("loading file at:" + fileLoc);
-            try {
-                DataSource src = new DataSource(fileLoc);
-                System.out.println("loaded file ");
-                trainingData = src.getDataSet();
-            } catch (Exception e) {
-                e.printStackTrace();
-                return;
-            }
-            // set class index because this is not an ARFF
-            if (trainingData.classIndex() == -1) {
-                trainingData.setClassIndex(trainingData.numAttributes() - 1);
-            }
-            // TODO: one instance includes multiple frames
-            // remove id, time, cur and total frames
-            trainingData.deleteAttributeAt(3);
-            trainingData.deleteAttributeAt(2);
-            trainingData.deleteAttributeAt(1);
-            trainingData.deleteAttributeAt(0);
-            // TODO: any other preprocessing?
+            ml.LoadTrainingData(fileLoc);
             //System.out.println("data loaded, press [y] to build the model");
             System.out.println("Training Data loaded, please build model");
             //BuildModel.execute(null);
         }
     }
 
-    public static class BuildModel extends MenuItem {
+    public static class RecordTrainingData extends MenuItem {
 
-        public BuildModel(String promptname, char keycode) {
+        public RecordTrainingData(String promptname, char keycode) {
             super(promptname, keycode);
+            needsController = true;
         }
 
         @Override
         public void execute(Object data) {
-            // Create Model
-            System.out.println("Building Model with " + classifier.toString() + "...");
-            // TODO: check file to make sure there is enough data?
-            if (trainingData == null) {
-                System.out.println("No training data! Please load data with [d]");
-                return;
-            }
+            isRecordingTrainingData = true;
             try {
-                classifier.buildClassifier(trainingData);
-                Evaluation eval = new Evaluation(trainingData);
-                eval.evaluateModel(classifier, trainingData);
-                String summ = eval.toSummaryString();
-                System.out.println(summ);
-            } catch (Exception e) {
+                String sIn = scanner.next().toLowerCase();
+                if (!sIn.contains(".csv")) {
+                    sIn = "_";
+                }
+                leapSensor.StartDataFile(true, saveLoc, sIn);
+            } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-            }
-            System.out.println("Finished training the model");
-            // classifier.getCapabilities() instead of
-            hasModel = true;
         }
     }
 
