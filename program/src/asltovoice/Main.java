@@ -3,15 +3,6 @@ package asltovoice;
 import com.leapmotion.leap.*;
 import java.io.FileNotFoundException;
 
-//TODO: move weka stuff to ml class
-import weka.core.Instances;
-import weka.core.converters.ConverterUtils.DataSource;
-import weka.classifiers.trees.J48;
-import weka.classifiers.Classifier;
-import weka.classifiers.lazy.IBk;
-import weka.classifiers.Evaluation;
-import weka.core.DenseInstance;
-
 import java.util.Scanner;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -28,22 +19,22 @@ public class Main {
     public static Scanner scanner = new Scanner(System.in);
     public static Controller controller = new Controller();
     public static LeapSensor leapSensor = new LeapSensor();
+    public static MachineLearning ml = new MachineLearning();
 
     public static long POLLRATE = 50;//ms
     //1.0/100.0;// 1 poll every .1 seconds in ms //TODO: is this good?
-    public static Classifier classifier;
-    public static Instances trainingData = null;
+
 
     public static int framesToRecord = 10;
     public static boolean isConnected, hasRecording = false;
-    public static boolean isRecordingTrainingData = false, hasModel = false;
+    public static boolean isRecordingTrainingData = false;
+    
 
     public static String saveLoc = "../savedata/";
     public static boolean running = true;
 
     public static void main(String[] args) throws InterruptedException, IOException {
-        //classifier = new J48();
-        classifier = new IBk();
+        
         try {
             Menu();
         } catch (Exception e) {
@@ -51,7 +42,7 @@ public class Main {
         }
         System.out.println("Exiting...");
     }
-
+    
     public interface Command {
         public abstract void execute(Object data);
     }
@@ -180,7 +171,7 @@ public class Main {
         while (running) {
             isConnected = controller.isConnected();
             System.out.print("\n");
-            System.out.println("Classifier: " + classifier.toString());
+            System.out.println("Classifier: " + ml.classifier.toString());
             if (isConnected) {
                 System.out.println("CONNECTED");
             } else {
@@ -273,42 +264,19 @@ public class Main {
 
         @Override
         public void execute(Object data) {
-            if (hasModel) {
+            if (ml.hasModel) {
                 RecordIn("_", framesToRecord, 1);
+                float[] lastRecording = new float[ml.trainingData.numAttributes()];
                 //System.out.println("\007");
                 System.out.println("\nAnalysing recorded data...");
-                DenseInstance di = new DenseInstance(trainingData.numAttributes());
-                //classifier.getCapabilities().
                 //get new values into array
                 // LoadValues() ?
-                for (int i = 0; i < di.numAttributes(); i++) {
-                    di.setValue(i, leapSensor.LoadDataAt(i));
+                for (int i = 0; i < ml.trainingData.numAttributes(); i++) {
+                    lastRecording[i] = leapSensor.LoadDataAt(i);
                 }
-
-                di.setDataset(trainingData);
-                try {
-                    double n = classifier.classifyInstance(di);
-                    System.out.print("The sign you signed is: \n");
-                    Thread.sleep(1000);
-                    System.out.print(">" + (int)n + "<\n");
-                    Thread.sleep(1000);
-                    //TODO: get accuracy
-//                    double[] ns = classifier.distributionForInstance(di);
-//                    System.out.print("Accuracy:\n");
-//                    for(int i=0;i<10;i++) {// only works with the numbers
-//                        if (i==(int)n) {
-//                            System.out.print(">");
-//                        } else {
-//                            System.out.print("");
-//                        }
-//                        System.out.print((int)i + ": ");
-//                        System.out.printf("%.3f", ns[i]);
-//                        System.out.print("%\n");
-//                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return;
-                }
+                
+                ml.Classify(lastRecording);
+                
             } else {
                 System.out.println("No model!");
             }
@@ -347,7 +315,7 @@ public class Main {
 
         @Override
         public void execute(Object data) {
-            if (!hasModel) {
+            if (!ml.hasModel) {
                 System.out.print("There is no model to save!");
                 return;
             }
@@ -355,14 +323,7 @@ public class Main {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("kkmmss_ddMMyy");//hourminutesecond_daymonthyear
             String text = date.format(formatter);
             String modelSavePath = saveLoc + "m_" + text + ".model";
-            System.out.printf("Saving model to %s...", modelSavePath);
-            try {
-                weka.core.SerializationHelper.write(modelSavePath, classifier);
-            } catch (Exception e) {
-                e.printStackTrace();
-                return;
-            }
-            System.out.println("Model Saved!");
+            ml.SaveModel(modelSavePath);
         }
     }
 
@@ -378,13 +339,7 @@ public class Main {
             String fileLoc = saveLoc;
             fileLoc += scanner.next();
             System.out.printf("Loading model from %s...", fileLoc);
-            try {
-                classifier = (Classifier) weka.core.SerializationHelper.read(fileLoc);
-            } catch (Exception e) {
-                e.printStackTrace();
-                return;
-            }
-            hasModel = true;
+            ml.LoadModel(fileLoc);
             System.out.println("\nModel Loaded!");
         }
     }
@@ -401,25 +356,7 @@ public class Main {
             String fileLoc = saveLoc;
             fileLoc += scanner.next();
             System.out.println("loading file at:" + fileLoc);
-            try {
-                DataSource src = new DataSource(fileLoc);
-                System.out.println("loaded file ");
-                trainingData = src.getDataSet();
-            } catch (Exception e) {
-                e.printStackTrace();
-                return;
-            }
-            // set class index because this is not an ARFF
-            if (trainingData.classIndex() == -1) {
-                trainingData.setClassIndex(trainingData.numAttributes() - 1);
-            }
-            // TODO: one instance includes multiple frames
-            // remove id, time, cur and total frames
-            trainingData.deleteAttributeAt(3);
-            trainingData.deleteAttributeAt(2);
-            trainingData.deleteAttributeAt(1);
-            trainingData.deleteAttributeAt(0);
-            // TODO: any other preprocessing?
+            ml.LoadTrainingData(fileLoc);
             //System.out.println("data loaded, press [y] to build the model");
             System.out.println("Training Data loaded, please build model");
             //BuildModel.execute(null);
@@ -435,28 +372,7 @@ public class Main {
         @Override
         public void execute(Object data) {
             // Create Model
-            System.out.println("Building Model with " + classifier.toString() + "...");
-            // TODO: check file to make sure there is enough data?
-            if (trainingData == null) {
-                System.out.println("No training data! Please load data with [d]");
-                return;
-            }
-            try {
-                classifier.buildClassifier(trainingData);
-                Evaluation eval = new Evaluation(trainingData);
-                eval.evaluateModel(classifier, trainingData);
-                String summ = eval.toSummaryString();
-                System.out.println(summ);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-            }
-            System.out.println("Finished training the model");
-            // classifier.getCapabilities() instead of
-            hasModel = true;
+            ml.BuildModel();
         }
     }
 
