@@ -71,32 +71,44 @@ public class MachineLearning {
     }
     public void Classify(double[] data) {
         // TODO: pass in multiple rows of data for time
+        // TODO: releif algorithm
         // to do do this somewhere else?
         DenseInstance di = new DenseInstance(trainingData.numAttributes());
         //classifier.getCapabilities().
         double[] classListD = trainingData.attributeToDoubleArray(trainingData.classIndex());
         int[] classListI = new int[classListD.length];
+        double[] featureWeights = new double[trainingData.numAttributes()];
         for (int i = 0; i < trainingData.numAttributes(); i++) {
             di.setValue(i, data[i]);
             classListI[i] = (int) classListD[i];
+            featureWeights[i] = 1;
         }
         
         di.setDataset(trainingData);
 
         // TODO call ANN and KNN here
-//        public static int KNN(float[][] data, int[] dataClasses, float[] point, int k) {
         double[][] dataset = new double[trainingData.numInstances()][];
         for (int i = 0; i < trainingData.numInstances(); i++) {
             dataset[i] = trainingData.get(i).toDoubleArray();
         }
         
-        int knnclass = KNN(dataset, classListI, data, 3);
+        double[] knnclassprob = KNN(dataset, classListI, featureWeights, data, 3);
+        int knnclass = (int) knnclassprob[0];
+        //double knnprob = knnclassprob[1];
         try {
             int mlpclass = (int) classifier.classifyInstance(di);
+            double[] mlpDist = classifier.distributionForInstance(di);
             System.out.print("The sign you signed is: \n");
-            System.out.print("MLP>" + trainingData.classAttribute().value(mlpclass) + "<\n");
-            System.out.print("KNN>" + trainingData.classAttribute().value(knnclass) + "<\n");
-            System.out.print("TODO: accuracy \n");            
+            System.out.print("MLP: " + trainingData.classAttribute().value(mlpclass) + "");
+            System.out.print(", " + mlpDist[mlpclass] + "%\n");
+            System.out.print("KNN: " + trainingData.classAttribute().value(knnclass) + "");
+            //System.out.print(", " + knnprob + "%\n");
+            //System.out.print("TODO: knn accuracy \n");
+            for (int i=0; i<mlpDist.length; i++){
+                // print mlp dists
+            }
+            
+            
             //TODO: get accuracy           
         } catch (Exception e) {
             e.printStackTrace();
@@ -160,13 +172,13 @@ public class MachineLearning {
     }
     
     // performs k nearest neighbors to classify point
-    public static int KNN(double[][] data, int[] dataClasses, double[] point, int k) {
+    public static double[] KNN(double[][] data, int[] dataClasses, double[] featureWeights, double[] point, int k) {
         // find distances to all points
         double[] distances = new double[data.length];
         for (int i = 0; i < data.length; i++) {
             distances[i] = 0;
             for (int j = 0; j < point.length; j++) {
-                distances[i] += Math.sqrt(data[i][j] * data[i][j] + point[j] * point[j]);
+                distances[i] += featureWeights[j] * Math.sqrt(data[i][j] * data[i][j] + point[j] * point[j]);
             }
         }
         // find nearest k points
@@ -190,12 +202,16 @@ public class MachineLearning {
         // return the majority class index of the nearest k
         int majorityClass = -1;
         int majorityAmount = -1;
+        double prob = 0;
         for (HashMap.Entry<Integer, Integer> entry : classAmounts.entrySet()) {
             if (entry.getValue() > majorityAmount) {
                 majorityAmount = entry.getValue();
                 majorityClass = entry.getKey();
+                prob += 2;
             }
         }
-        return majorityClass;
+        //prob /= k;
+        double[] classProb = {majorityClass, prob};
+        return classProb;
     }
 }
