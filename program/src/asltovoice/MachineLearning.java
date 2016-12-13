@@ -167,7 +167,7 @@ public class MachineLearning {
     }
     
     // performs k nearest neighbors to classify point
-    public  double[] KNN(double[][] data, int[] dataClasses, double[] featureWeights, double[] point, int k) {
+    public static double[] KNN(double[][] data, int[] dataClasses, double[] featureWeights, double[] point, int k) {
         // find distances to all points
         double[] distances = new double[data.length];
         for (int i = 0; i < data.length; i++) {
