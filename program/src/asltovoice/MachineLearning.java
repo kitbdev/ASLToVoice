@@ -92,24 +92,23 @@ public class MachineLearning {
             dataset[i] = trainingData.get(i).toDoubleArray();
         }
         
-        double[] knnclassprob = KNN(dataset, classListI, featureWeights, data, 3);
+        double[] knnclassprob = KNN(dataset, classListI, featureWeights, data, 7);
         int knnclass = (int) knnclassprob[0];
-        //double knnprob = knnclassprob[1];
+        double knnprob = knnclassprob[1];
         try {
             int mlpclass = (int) classifier.classifyInstance(di);
             double[] mlpDist = classifier.distributionForInstance(di);
             System.out.print("The sign you signed is: \n");
             System.out.print("MLP: " + trainingData.classAttribute().value(mlpclass) + "");
-            System.out.print(", " + mlpDist[mlpclass] + "%\n");
+            System.out.print(", " + mlpDist[mlpclass]*100 + "%\n");
             System.out.print("KNN: " + trainingData.classAttribute().value(knnclass) + "");
-            //System.out.print(", " + knnprob + "%\n");
+            System.out.print(", " + knnprob*100 + "%\n");
             //System.out.print("TODO: knn accuracy \n");
-            for (int i=0; i<mlpDist.length; i++){
-                // print mlp dists
-            }
-            
-            
-            //TODO: get accuracy           
+//            for (int i=0; i<mlpDist.length; i++){
+//                // print mlp dists
+//                
+//            }
+            //TODO: get accuracy
         } catch (Exception e) {
             e.printStackTrace();
             return;
@@ -202,15 +201,13 @@ public class MachineLearning {
         // return the majority class index of the nearest k
         int majorityClass = -1;
         int majorityAmount = -1;
-        double prob = 0;
         for (HashMap.Entry<Integer, Integer> entry : classAmounts.entrySet()) {
             if (entry.getValue() > majorityAmount) {
                 majorityAmount = entry.getValue();
                 majorityClass = entry.getKey();
-                prob += 2;
             }
         }
-        //prob /= k;
+        double prob = classAmounts.get(majorityClass) / k;
         double[] classProb = {majorityClass, prob};
         return classProb;
     }

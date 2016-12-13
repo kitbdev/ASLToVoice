@@ -4,19 +4,14 @@ import com.leapmotion.leap.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ArrayList;
 
-/**
- * This class will process the frame and output to a file
- *
- * @author Ian
- */
-public class LeapSensor {
 
+public class LeapSensor {
+    
     public long lastFrameID = 0;
     boolean recording = false;
     List<Float> records = new ArrayList<>();

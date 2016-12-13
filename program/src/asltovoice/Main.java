@@ -5,14 +5,10 @@ import java.io.FileNotFoundException;
 
 import java.util.Scanner;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Main {
 
@@ -22,8 +18,7 @@ public class Main {
     public static MachineLearning ml = new MachineLearning();
 
     public static long POLLRATE = 50;//ms
-    //1.0/100.0;// 1 poll every .1 seconds in ms //TODO: is this good?
-
+    //1.0/100.0;// 1 poll every .1 seconds in ms //TODO: is this optimal?
 
     public static int framesToRecord = 10;
     public static boolean isConnected, hasRecording = false;
