@@ -80,7 +80,6 @@ public class MachineLearning {
         double[] featureWeights = new double[trainingData.numAttributes()];
         for (int i = 0; i < trainingData.numAttributes(); i++) {
             di.setValue(i, data[i]);
-            classListI[i] = (int) classListD[i];
             featureWeights[i] = 1;
         }
         
@@ -90,9 +89,12 @@ public class MachineLearning {
         double[][] dataset = new double[trainingData.numInstances()][];
         for (int i = 0; i < trainingData.numInstances(); i++) {
             dataset[i] = trainingData.get(i).toDoubleArray();
+            dataset[i][dataset.length-1] = 0;
+            //if (trainingData.checkForAttributeType(i))
+            classListI[i] = (int) classListD[i];
         }
         
-        double[] knnclassprob = KNN(dataset, classListI, featureWeights, data, 7);
+        double[] knnclassprob = KNN(dataset, classListI, featureWeights, data, 5);
         int knnclass = (int) knnclassprob[0];
         double knnprob = knnclassprob[1];
         try {
@@ -102,12 +104,12 @@ public class MachineLearning {
             System.out.print("MLP: " + trainingData.classAttribute().value(mlpclass) + "");
             System.out.print(", " + mlpDist[mlpclass]*100 + "%\n");
             System.out.print("KNN: " + trainingData.classAttribute().value(knnclass) + "");
-            System.out.print(", " + knnprob*100 + "%\n");
+            System.out.print(", " + knnprob*100 + "% of nearest classes \n");
             //System.out.print("TODO: knn accuracy \n");
-//            for (int i=0; i<mlpDist.length; i++){
-//                // print mlp dists
-//                
-//            }
+            for (int i=0; i<mlpDist.length; i++){
+                // print mlp dists
+                System.out.print(trainingData.classAttribute().value(i)+": "+(float)((int)(mlpDist[i]*10000))/100+"%\n");
+            }
             //TODO: get accuracy
         } catch (Exception e) {
             e.printStackTrace();
@@ -182,7 +184,7 @@ public class MachineLearning {
         }
         // find nearest k points
         double[] nearestKDistances = new double[k];
-        HashMap<Integer, Integer> classAmounts = new HashMap<Integer, Integer>();
+        HashMap<Integer, Integer> classAmounts = new HashMap<>();
         for (int i = 0; i < k; i++) {
             nearestKDistances[i] = 9999999;
             int nearestIndex = -1;
@@ -207,7 +209,7 @@ public class MachineLearning {
                 majorityClass = entry.getKey();
             }
         }
-        double prob = classAmounts.get(majorityClass) / k;
+        double prob = (double)classAmounts.get(majorityClass) / k;
         double[] classProb = {majorityClass, prob};
         return classProb;
     }
