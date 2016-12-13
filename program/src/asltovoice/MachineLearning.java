@@ -85,7 +85,6 @@ public class MachineLearning {
         
         di.setDataset(trainingData);
 
-        // TODO call ANN and KNN here
         double[][] dataset = new double[trainingData.numInstances()][];
         for (int i = 0; i < trainingData.numInstances(); i++) {
             dataset[i] = trainingData.get(i).toDoubleArray();
@@ -167,14 +166,16 @@ public class MachineLearning {
     }
     
     // performs k nearest neighbors to classify point
-    public static double[] KNN(double[][] data, int[] dataClasses, double[] featureWeights, double[] point, int k) {
+    public  double[] KNN(double[][] data, int[] dataClasses, double[] featureWeights, double[] point, int k) {
         // find distances to all points
         double[] distances = new double[data.length];
         for (int i = 0; i < data.length; i++) {
             distances[i] = 0;
             for (int j = 0; j < point.length; j++) {
-                distances[i] += featureWeights[j] * Math.sqrt(data[i][j] * data[i][j] + point[j] * point[j]);
+                double t = data[i][j] - point[j];
+                distances[i] += featureWeights[j] * (t*t);
             }
+            distances[i] = Math.sqrt(distances[i]);
         }
         // find nearest k points
         double[] nearestKDistances = new double[k];
@@ -190,11 +191,12 @@ public class MachineLearning {
                     nearestIndex = j;
                 }
             }
-            distances[nearestIndex] = 9999999;
             if (nearestIndex == -1){
                 //no more classes
                 break;
             }
+            distances[nearestIndex] = 9999999;
+            
             int kNearestClass = dataClasses[nearestIndex];
             // add one to the current amount of that key
             //classAmounts.putIfAbsent(kNearestClass, 0);
@@ -202,7 +204,7 @@ public class MachineLearning {
         //}
         // return the majority class index of the nearest k
             int entryVal = classAmounts.get(kNearestClass);
-            //System.out.print(trainingData.classAttribute().value(kNearestClass)+":"+entryVal+" \n");
+            System.out.print(trainingData.classAttribute().value(kNearestClass)+":"+entryVal+" \n");
         //for (HashMap.Entry<Integer, Integer> entry : classAmounts.entrySet()) {
             if (entryVal > majorityAmount) {
                 majorityAmount = entryVal;
