@@ -105,12 +105,10 @@ public class MachineLearning {
             System.out.print(", " + knnprob*100 + "% of nearest classes \n");
             System.out.print("MLP: " + trainingData.classAttribute().value(mlpclass) + "");
             System.out.print(", " + mlpDist[mlpclass]*100 + "%\n");
-            //System.out.print("TODO: knn accuracy \n");
             for (int i=0; i<mlpDist.length; i++){
                 // print mlp dists
                 System.out.print(trainingData.classAttribute().value(i)+": "+(float)((int)(mlpDist[i]*10000))/100+"%\n");
             }
-            //TODO: get accuracy
         } catch (Exception e) {
             e.printStackTrace();
             return;
@@ -125,16 +123,13 @@ public class MachineLearning {
             return;
         }
         try {
-            //TODO: check this
             MultilayerPerceptron mp = new MultilayerPerceptron();
             mp.setLearningRate(0);
             mp.setMomentum(0.2);
             mp.setTrainingTime(2000);
             mp.setHiddenLayers("3");
             classifier = mp;
-            //mp.buildClassifier(trainingData);
             classifier.buildClassifier(trainingData);
-            //TODO: do this here?
             Evaluation eval = new Evaluation(trainingData);
             eval.evaluateModel(classifier, trainingData);
             String summ = eval.toSummaryString();
@@ -147,7 +142,6 @@ public class MachineLearning {
         } catch (InterruptedException e) {
         }
         System.out.println("Finished training the model");
-        // classifier.getCapabilities() instead of
         hasModel = true;
     }
 
@@ -181,9 +175,7 @@ public class MachineLearning {
             for (int j = 0; j < point.length; j++) {
                 distances[i] += featureWeights[j] * Math.sqrt(data[i][j] * data[i][j] + point[j] * point[j]);
             }
-            //System.out.print(distances[i]+", ");
         }
-//        System.out.print("\n");
         // find nearest k points
         double[] nearestKDistances = new double[k];
         HashMap<Integer, Integer> classAmounts = new HashMap<>();
@@ -201,7 +193,6 @@ public class MachineLearning {
             distances[nearestIndex] = 9999999;
             if (nearestIndex == -1){
                 //no more classes
-                //System.out.print("short\n ");
                 break;
             }
             int kNearestClass = dataClasses[nearestIndex];
