@@ -216,4 +216,7 @@ public class MachineLearning {
         double[] classProb = {majorityClass, prob};
         return classProb;
     }
+
+    public 
+
 }
