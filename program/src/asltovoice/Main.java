@@ -251,19 +251,24 @@ public class Main {
 
         @Override
         public void execute(Object data) {
-            if (ml.HasModel()) {
-                RecordIn("_", framesToRecord, 1);
-                System.out.println("\nAnalysing recorded data...");
-                // get new values into array
-                double[] lastRecording = new double[ml.trainingData.numAttributes()];
-                //TODO: get data over time
-                for (int i = 0; i < ml.trainingData.numAttributes(); i++) {
-                    lastRecording[i] = (double)leapSensor.LoadDataAt(i);
-                }
-                ml.Classify(lastRecording);
-            } else {
-                System.out.println("Buid model first");
+            if (!hasController){
+                System.out.println("Needs leap");
+                return;
             }
+            if (!ml.HasModel()) {
+                System.out.println("Buid model first");
+                return;
+            }
+            RecordIn("_", framesToRecord, 1);
+            System.out.println("\nAnalysing recorded data...");
+            // get new values into array
+            double[] lastRecording = new double[ml.trainingData.numAttributes()];
+            //TODO: get data over time
+            for (int i = 0; i < ml.trainingData.numAttributes(); i++) {
+                lastRecording[i] = (double)leapSensor.LoadDataAt(i);
+            }
+            ml.Classify(lastRecording);
+        
             leapSensor.ClearRecording();
         }
     }
@@ -276,15 +281,16 @@ public class Main {
 
         @Override
         public void execute(Object data) {
-            if (ml.HasModel()) {
-                System.out.print("Enter Data Location: " + saveLoc);
-                String fileLoc = saveLoc;
-                fileLoc += scanner.next();
-                
-                ml.Classify(fileLoc);
-            } else {
-                System.out.println("Buid model first");
+            if (!ml.HasModel()) {
+                System.out.println("Build model first");
+                return;
             }
+            System.out.print("Enter Data Location: " + saveLoc);
+            String fileLoc = saveLoc;
+            fileLoc += scanner.next();
+            
+            ml.Classify(fileLoc);
+        
             leapSensor.ClearRecording();
         }
     }
@@ -526,7 +532,6 @@ public class Main {
         leapSensor.StopRecording();
         
         System.out.println("Done recording");
-        
     }
 
     public static boolean Update() {
