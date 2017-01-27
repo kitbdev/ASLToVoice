@@ -14,9 +14,10 @@ public class LeapSensor {
     
     public long lastFrameID = 0;
     boolean recording = false;
-    List<Float> records = new ArrayList<>();
+    FrameData currentFrame;
+    // List<Float> records = new ArrayList<>();
     long recordStartTimeN = 0;
-    List<Long> timeRecords = new ArrayList<>();
+    // List<Long> timeRecords = new ArrayList<>();
     int numFrames = 0;
     String sign = "";
     String savePath = "";
