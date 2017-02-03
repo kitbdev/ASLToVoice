@@ -12,11 +12,24 @@ import java.util.ArrayList;
 public class HMM {
     List<FrameData> frames = new ArrayList();
     int lastSign;
+    boolean signEnded = false;
+    
+    // add frame and check if we have stopped
     public void Analyze(FrameData fd) {
-
-    }
-    public void Clear() {
         
+        signEnded = true;
     }
-
+    
+    public boolean SignEnded() {
+        return signEnded;
+    }
+    
+    public void Clear() {
+        signEnded = false;
+        frames.clear();
+    }
+    
+    public FrameData[] GetFrames() {
+        return (FrameData[]) frames.toArray();
+    }
 }
