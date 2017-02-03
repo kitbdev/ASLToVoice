@@ -58,14 +58,10 @@ public class LeapSensor {
     
     void RecordHand(Hand hand) {
         if (hand==null) {
-            // // there are 60 records added
-            // for (int i=0; i<60; i++) {
-            //     curFrame. = 0f;
-            // }
             return;
         }
         // currently arm, hand, and finger pos rot and vel
-//        curframe.handPos
+        // TODO: left vs right hands
         Arm arm = hand.arm();
         if (!arm.isValid()) {
             // for (int i=0; i<6; i++) {
@@ -121,6 +117,10 @@ public class LeapSensor {
         return hand.isValid();
     }
 
+    public boolean ControllerConnected() {
+        return controller.isConnected();
+    }
+    
     // start recording with the leap
     public void StartRecording(String signLabel) {
         ClearFrameData();

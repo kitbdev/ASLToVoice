@@ -1,7 +1,5 @@
-package aslToVoice;
+package asltovoice;
 
-import asltovoice.FrameData;
-import asltovoice.HMM;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -20,22 +18,23 @@ public class ASLtoVoiceMain {
     public static long POLLRATE = 50;//ms
     public static String saveLoc = "../savedata/";
 
-    int main(String[] args) {
+    public static void main(String[] args) {
         while (running) {
             CLI();
         }
-        return 0;
     }
-    void CLI() {
+    static void CLI() {
         System.out.println("Enter a command:");
-        String[] com = scanner.next().toLowerCase().split(" ");
-        if (com[0] == "exit") {
+        String[] com = scanner.nextLine().toLowerCase().trim().split(" ");
+//        System.out.println(">"+com.length+",");
+        if ("exit".equals(com[0])) {
             running = false;
         }
-        if (com[0] == "record") {
+        if ("record".equals(com[0])) {
             float recDelay = 0;
-            if (com.length<1) {
+            if (com.length<2) {
                 System.out.println("need a class name to record");
+                return;
             }
             if (com.length>2) {
                 try {
@@ -44,7 +43,7 @@ public class ASLtoVoiceMain {
             }
             RecordIn(com[1], recDelay);
         }
-        if (com[0] == "save") {
+        if ("save".equals(com[0])) {
             String fname = "";
             if (com.length > 1) {
                 fname = com[1];
@@ -52,7 +51,11 @@ public class ASLtoVoiceMain {
             Save(fname);
         }
     }
-    void RecordIn(String sign, float recordIn) {
+    static void RecordIn(String sign, float recordIn) {
+        if (!leapSensor.ControllerConnected()){
+            System.out.println("need controller!");
+            return;
+        }
         if (recordIn > 0) {
             for (int i = 0; i < recordIn; i++) {
                 System.out.println((recordIn - i) + "...");
@@ -69,7 +72,7 @@ public class ASLtoVoiceMain {
             e.printStackTrace();
         }
     }
-    void Record(String sign) throws InterruptedException {
+    static void Record(String sign) throws InterruptedException {
         System.out.println("Recording " + sign);
         hmm.Clear();
         leapSensor.StartRecording(sign);
@@ -101,10 +104,9 @@ public class ASLtoVoiceMain {
             }
             Thread.sleep(timeLeftThisFrame);// sleep for updates/sec-dt
         }
-        leapSensor.StopRecording();
         System.out.println("Done recording");
     }
-    void Save(String fname) {
+    static void Save(String fname) {
         StringBuilder sb = new StringBuilder();
         FrameData[] frames = hmm.GetFrames();
 
@@ -146,7 +148,7 @@ public class ASLtoVoiceMain {
         hmm.Clear();
         System.out.println("Saved!");
     }
-    void Load() {
+    static void Load() {
 
     }
 }
