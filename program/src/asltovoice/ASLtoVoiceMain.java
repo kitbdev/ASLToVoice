@@ -45,9 +45,11 @@ public class ASLtoVoiceMain {
             RecordIn(com[1], recDelay);
         }
         if (com[0] == "save") {
+            String fname = "";
             if (com.length > 1) {
-                
+                fname = com[1];
             }
+            Save(fname);
         }
     }
     void RecordIn(String sign, float recordIn) {
@@ -102,23 +104,33 @@ public class ASLtoVoiceMain {
         leapSensor.StopRecording();
         System.out.println("Done recording");
     }
-    void Save() throws FileNotFoundException {
+    void Save(String fname) {
         StringBuilder sb = new StringBuilder();
         FrameData[] frames = hmm.GetFrames();
 
         //create file
         String filename = "";
         filename += saveLoc;
-        filename += "td_";
-        LocalDateTime date = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("kkmmss_ddMMyy");//hourminutesecond_daymonthyear
-        filename += date.format(formatter);
-        // TODO: add types of classes to path?
+        if (fname=="") {
+            filename += "td_";
+            LocalDateTime date = LocalDateTime.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("kkmmss_ddMMyy");//hourminutesecond_daymonthyear
+            filename += date.format(formatter);
+            // TODO: add types of classes to path?
+        } else {
+            filename += fname;
+        }
         filename += ".csv";
+        
         System.out.println("New file is: ");
         System.out.println(filename);
-        PrintWriter openFile = new PrintWriter(new File(filename));
-        
+        PrintWriter openFile;
+        try {
+            openFile = new PrintWriter(new File(filename));
+        } catch (FileNotFoundException e) {
+            System.out.println("creating file failed."+e.getMessage());
+            return;
+        }
         // add data to the file
         // add header line
         frames[0].GetHeaderLine();
