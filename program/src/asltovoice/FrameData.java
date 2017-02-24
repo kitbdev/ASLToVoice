@@ -5,8 +5,10 @@ package asltovoice;
 // time taken, number of frames, and other needed info
 public class FrameData {
     //TODO: two hands
-    public float time; // time since start of recording
-    public float curframe;
+    public int id;
+    public long time; // time since start of recording in ms
+    public int curframe;
+    public int totalframes;
     public Vector3 armPos;
     public Vector3 armRot;
     public Vector3 handPos;
@@ -24,29 +26,108 @@ public class FrameData {
             x = 0; y = 0; z = 0;
         };
     }
-        Vector3 zero = new Vector3();
+    Vector3 zero = new Vector3();
+
     // Loads comma seperated values into the correct variables
     public void LoadData(String textValues) {
-        // TODO
+        String[] dataValues = textValues.split(", ");
+        id = Integer.parseInt(dataValues[0]);
+        time = Integer.parseInt(dataValues[1]);
+        curframe = Integer.parseInt(dataValues[2]);
+        totalframes = Integer.parseInt(dataValues[3]);
+        armPos.x = Float.parseFloat(dataValues[4]);
+        armPos.y = Float.parseFloat(dataValues[5]);
+        armPos.z = Float.parseFloat(dataValues[6]);
+        armRot.x = Float.parseFloat(dataValues[7]);
+        armRot.y = Float.parseFloat(dataValues[8]);
+        armRot.z = Float.parseFloat(dataValues[9]);
+        handPos.x = Float.parseFloat(dataValues[10]);
+        handPos.y = Float.parseFloat(dataValues[11]);
+        handPos.z = Float.parseFloat(dataValues[12]);
+        handRot.x = Float.parseFloat(dataValues[13]);
+        handRot.y = Float.parseFloat(dataValues[14]);
+        handRot.z = Float.parseFloat(dataValues[15]);
+        handVel.x = Float.parseFloat(dataValues[16]);
+        handVel.y = Float.parseFloat(dataValues[17]);
+        handVel.z = Float.parseFloat(dataValues[18]);
+        for (int i=0;i<5;i++)
+        {
+            fingerPos[i].x = Float.parseFloat(dataValues[19+i*9]);
+            fingerPos[i].y = Float.parseFloat(dataValues[20+i*9]);
+            fingerPos[i].z = Float.parseFloat(dataValues[21+i*9]);
+            fingerRot[i].x = Float.parseFloat(dataValues[22+i*9]);
+            fingerRot[i].y = Float.parseFloat(dataValues[23+i*9]);
+            fingerRot[i].z = Float.parseFloat(dataValues[24+i*9]);
+            fingerVel[i].x = Float.parseFloat(dataValues[25+i*9]);
+            fingerVel[i].y = Float.parseFloat(dataValues[26+i*9]);
+            fingerVel[i].z = Float.parseFloat(dataValues[27+i*9]);
+        }
+        sign = dataValues[dataValues.length-1];
     }
     // Saves variables into a comma seperated string of values
     public String GetData() {
         StringBuilder sb = new StringBuilder();
-        // TODO
+        sb.append(id);
+        sb.append(',');
         sb.append(time);
         sb.append(',');
         sb.append(curframe);
         sb.append(',');
-//        sb.append(numFrames);// total frames of this sign
-//        sb.append(',');
-////        for (int j = 0; j < dataPerFrame; j++) {
-////            sb.append(records.get(i * dataPerFrame + j).toString());
-////            sb.append(',');
-//        }
-        if (sign != "") {
-            sb.append(sign);
+        sb.append(totalframes);
+        sb.append(',');
+        sb.append(armPos.x);
+        sb.append(',');
+        sb.append(armPos.y);
+        sb.append(',');
+        sb.append(armPos.z);
+        sb.append(',');
+        sb.append(armRot.x);
+        sb.append(',');
+        sb.append(armRot.y);
+        sb.append(',');
+        sb.append(armRot.z);
+        sb.append(',');
+        sb.append(handPos.x);
+        sb.append(',');
+        sb.append(handPos.y);
+        sb.append(',');
+        sb.append(handPos.z);
+        sb.append(',');
+        sb.append(handRot.x);
+        sb.append(',');
+        sb.append(handRot.y);
+        sb.append(',');
+        sb.append(handRot.z);
+        sb.append(',');
+        sb.append(handVel.x);
+        sb.append(',');
+        sb.append(handVel.y);
+        sb.append(',');
+        sb.append(handVel.z);
+        sb.append(',');
+        for (int i=0;i<5;i++)
+        {
+            sb.append(fingerPos[i].x);
+            sb.append(',');
+            sb.append(fingerPos[i].y);
+            sb.append(',');
+            sb.append(fingerPos[i].z);
+            sb.append(',');
+            sb.append(fingerRot[i].x);
+            sb.append(',');
+            sb.append(fingerRot[i].y);
+            sb.append(',');
+            sb.append(fingerRot[i].z);
+            sb.append(',');
+            sb.append(fingerVel[i].x);
+            sb.append(',');
+            sb.append(fingerVel[i].y);
+            sb.append(',');
+            sb.append(fingerVel[i].z);
+            sb.append(',');
         }
-        return "";
+        sb.append(sign);
+        return sb.toString();
     }
     public String GetHeaderLine() {
         String header = "";
