@@ -2,10 +2,18 @@ package asltovoice;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
+import java.util.List;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ASLtoVoiceMain {
 
@@ -148,7 +156,14 @@ public class ASLtoVoiceMain {
         hmm.Clear();
         System.out.println("Saved!");
     }
-    static void Load() {
-
+    static void Load(String fn) {
+        try {
+            Path filename = Paths.get(saveLoc, fn);
+            List<String> lines = Files.readAllLines(filename, Charset.defaultCharset());
+            FrameData[] frames;//...
+        } catch (IOException ex) {
+            System.out.println(ex);
+            return;
+        }
     }
 }
