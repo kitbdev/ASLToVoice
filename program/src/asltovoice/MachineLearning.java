@@ -19,7 +19,8 @@ public class MachineLearning {
     //classifier = new J48();
     //classifier = new IBk();
     boolean hasModel = false;
-
+    public TTS tts;
+    
     boolean HasModel() {
         return hasModel;
     }
@@ -102,12 +103,14 @@ public class MachineLearning {
             System.out.print("The sign you signed is: \n");
             System.out.print("KNN: " + trainingData.classAttribute().value(knnclass) + "");
             System.out.print(", " + knnprob*100 + "% of nearest classes \n");
-            System.out.print("MLP: " + trainingData.classAttribute().value(mlpclass) + "");
+            System.out.print("MLP: " + trainingData.classAttribute().value(mlpclass) + "!\n");
             System.out.print(", " + mlpDist[mlpclass]*100 + "%\n");
             for (int i=0; i<mlpDist.length; i++){
                 // print mlp dists
                 System.out.print(trainingData.classAttribute().value(i)+": "+(float)((int)(mlpDist[i]*10000))/100+"%\n");
+                
             }
+            tts.speak("You signed "+trainingData.classAttribute().value(mlpclass));
         } catch (Exception e) {
             e.printStackTrace();
             return;

@@ -16,6 +16,7 @@ public class Main {
     public static Controller controller = new Controller();
     public static LeapSensor leapSensor = new LeapSensor();
     public static MachineLearning ml = new MachineLearning();
+    public static TTS tts = new TTS();
 
     public static long POLLRATE = 50;//ms
     //1.0/100.0;// 1 poll every .1 seconds in ms //TODO: is this optimal?
@@ -29,13 +30,15 @@ public class Main {
     public static boolean running = true;
 
     public static void main(String[] args) throws InterruptedException, IOException {
-        
+        tts.allo();
+        ml.tts = tts;
         try {
             Menu();
         } catch (Exception e) {
             e.printStackTrace();
         }
         System.out.println("Exiting...");
+        tts.deallo();
     }
     
     public interface Command {
@@ -99,6 +102,7 @@ public class Main {
         mainmis.add(new RecordTestData("Record and classify new test data", 'n'));
         mainmis.add(new ClassifyData("classify new test data", 'a'));
         mainmis.add(new LoadTrainingData("Load training data", 'd'));
+        mainmis.add(new SaySomething("Say something", '9'));
         //mainmis.add(new SaveModel("Save model", 's'));//TODO needs hasModel -- in method now?
         //mainmis.add(new LoadModel("Load model", 'l'));
         //mainmis.add(new MenuItem("Change classifier type", 'c'));
@@ -348,6 +352,21 @@ public class Main {
             System.out.println("\nModel Loaded!");
         }
     }
+    
+    public static class SaySomething extends MenuItem {
+
+        public SaySomething(String promptname, char keycode) {
+            super(promptname, keycode);
+        }
+
+        @Override
+        public void execute(Object data) {
+            System.out.print("Enter Something: ");
+            String say = scanner.next();
+            tts.speak(say);
+            System.out.println("\nsaid it!");
+        }
+    }
 
     public static class LoadTrainingData extends MenuItem {
 
@@ -504,7 +523,7 @@ public class Main {
             boolean gotFrame = Update();
             if (!gotFrame) {
                 framesLeft++;
-                System.out.println("Hand not detected! No data recorded.");
+                //System.out.println("Hand not detected! No data recorded.");
                 while (!leapSensor.HandAvailable(controller.frame())) {
                     System.out.print(".");
                     Thread.sleep(100);
@@ -512,7 +531,7 @@ public class Main {
                 System.out.print("\n");
             } else {
                 if (nframes >= 100 && framesLeft % 10 == 0) {
-                    System.out.println("frame " + (nframes - framesLeft));
+                    //System.out.println("frame " + (nframes - framesLeft));
                 }
                 //System.out.print(framesLeft+", \n");
             }
