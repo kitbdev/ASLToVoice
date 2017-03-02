@@ -1,8 +1,6 @@
 package asltovoice;
 
 import java.util.HashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import weka.classifiers.Classifier;
 
 import weka.classifiers.Evaluation;
@@ -25,20 +23,21 @@ public class MachineLearning {
         return hasModel;
     }
     
+    // loads the csv file with training data
     void LoadTrainingData(String fileLoc) {
         try {
             ConverterUtils.DataSource src = new ConverterUtils.DataSource(fileLoc);
             System.out.println("loaded file ");
             trainingData = src.getDataSet();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e);
             return;
         }
-        // set class index because this is not an ARFF
+        // set class index because this is a csv
         if (trainingData.classIndex() == -1) {
             trainingData.setClassIndex(trainingData.numAttributes() - 1);
         }
-        // TODO: one instance includes multiple frames
+        // TODO: one instance will include multiple frame
         // remove id, time, cur and total frames
         trainingData.deleteAttributeAt(3);
         trainingData.deleteAttributeAt(2);
@@ -47,6 +46,8 @@ public class MachineLearning {
         // TODO: any other preprocessing?
     }
     
+    // loads a file of data to be classified
+    // unused
     public void Classify(String fileLoc) {
         try {
             ConverterUtils.DataSource src = new ConverterUtils.DataSource(fileLoc);
@@ -66,16 +67,16 @@ public class MachineLearning {
         Classify(classifyData.get(0).toDoubleArray());
         
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e);
             return;
         }
     }
+    
+    // prints the sign using the built model and the training data on the given data
     public void Classify(double[] data) {
-        // TODO: pass in multiple rows of data for time
-        // TODO: releif algorithm
-        // to do do this somewhere else?
+        // TODO: new data format
+        // TODO: relief algorithm on data
         DenseInstance di = new DenseInstance(trainingData.numAttributes());
-        //classifier.getCapabilities().
         double[] classListD = trainingData.attributeToDoubleArray(trainingData.classIndex());
         int[] classListI = new int[classListD.length];
         double[] featureWeights = new double[trainingData.numAttributes()];
@@ -94,32 +95,41 @@ public class MachineLearning {
             classListI[i] = (int) classListD[i];
         }
         
-        double[] knnclassprob = KNN(dataset, classListI, featureWeights, data, 31);
-        int knnclass = (int) knnclassprob[0];
-        double knnprob = knnclassprob[1];
         try {
+            // classify with KNN
+            double[] knnclassprob = KNN(dataset, classListI, featureWeights, data, 31);
+            int knnclass = (int) knnclassprob[0];
+            double knnprob = knnclassprob[1]*100;
+            // classify with MLP
             int mlpclass = (int) classifier.classifyInstance(di);
-            double[] mlpDist = classifier.distributionForInstance(di);
-            System.out.print("The sign you signed is: \n");
-            System.out.print("KNN: " + trainingData.classAttribute().value(knnclass) + "");
-            System.out.print(", " + knnprob*100 + "% of nearest classes \n");
-            System.out.print("MLP: " + trainingData.classAttribute().value(mlpclass) + "!\n");
-            System.out.print(", " + mlpDist[mlpclass]*100 + "%\n");
-            for (int i=0; i<mlpDist.length; i++){
-                // print mlp dists
-                System.out.print(trainingData.classAttribute().value(i)+": "+(float)((int)(mlpDist[i]*10000))/100+"%\n");
-                
+            double[] mlpdist = classifier.distributionForInstance(di);
+            double mlpprob = mlpdist[mlpclass]*100;
+            // print mlp distributions
+            for (int i=0; i<mlpdist.length; i++){
+                System.out.print(trainingData.classAttribute().value(i)+": "+(float)((int)(mlpdist[i]*10000))/100+"%, ");
             }
-            tts.speak("You signed "+trainingData.classAttribute().value(mlpclass));
+            System.out.println();
+            
+            // print the result
+            System.out.print("The sign you signed is: \n");
+            
+            System.out.print("KNN: " + trainingData.classAttribute().value(knnclass) + "");
+            System.out.print(", " + knnprob + "% of nearest classes \n");
+            
+            System.out.print("MLP: " + trainingData.classAttribute().value(mlpclass) + "!\n");
+            System.out.print(", " + mlpprob + "%\n");
+            // voice the output of the highest probability
+            tts.speak("You signed "+trainingData.classAttribute().value(mlpprob>knnprob?mlpclass:knnclass));
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e);
             return;
         }
     }
 
+    // build a MLP model with weka 
     public void BuildModel() {
         System.out.println("Building Model with Multilayer Perceptron...");// + classifier.toString() + "...");
-        // TODO: check file to make sure there is enough data?
+        // TODO: check file to make sure it is correct?
         if (trainingData == null) {
             System.out.println("No training data! Please load data with [d]");
             return;
@@ -137,11 +147,7 @@ public class MachineLearning {
             String summ = eval.toSummaryString();
             System.out.println(summ);
         } catch (Exception e) {
-            e.printStackTrace();
-        }
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
+            System.out.println(e);
         }
         System.out.println("Finished training the model");
         hasModel = true;
@@ -152,7 +158,7 @@ public class MachineLearning {
         try {
             weka.core.SerializationHelper.write(modelSavePath, classifier);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e);
             return;
         }
         System.out.println("Model Saved!");
@@ -162,7 +168,7 @@ public class MachineLearning {
         try {
             classifier = (Classifier) weka.core.SerializationHelper.read(fileLoc);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e);
             return;
         }
         hasModel = true;
@@ -207,17 +213,17 @@ public class MachineLearning {
         //}
         // return the majority class index of the nearest k
             int entryVal = classAmounts.get(kNearestClass);
-            System.out.print(trainingData.classAttribute().value(kNearestClass)+":"+entryVal+" \n");
+            // TODO: print out the percentages, not the count
+            System.out.print(trainingData.classAttribute().value(kNearestClass)+":"+entryVal+", ");
         //for (HashMap.Entry<Integer, Integer> entry : classAmounts.entrySet()) {
             if (entryVal > majorityAmount) {
                 majorityAmount = entryVal;
                 majorityClass = kNearestClass;
             }
         }
-        //System.out.print("\n");
+        System.out.println();
         double prob = (double)classAmounts.get(majorityClass) / k;
         double[] classProb = {majorityClass, prob};
         return classProb;
     }
-
 }

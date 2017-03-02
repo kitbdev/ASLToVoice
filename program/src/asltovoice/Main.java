@@ -19,7 +19,7 @@ public class Main {
     public static TTS tts = new TTS();
 
     public static long POLLRATE = 50;//ms
-    //1.0/100.0;// 1 poll every .1 seconds in ms //TODO: is this optimal?
+    // 1.0/100.0 = 1 poll every .1 seconds in ms
 
     public static int framesToRecord = 10;
     public static boolean isConnected, hasRecording = false;
@@ -35,60 +35,12 @@ public class Main {
         try {
             Menu();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e);
         }
         System.out.println("Exiting...");
         tts.deallo();
     }
     
-    public interface Command {
-        public abstract void execute(Object data);
-    }
-
-    public static class MenuItem implements Command {
-        public String name = "Do this";
-        public char code = 'k';
-        public boolean enabled = false;
-        public boolean needsController = false;
-        public Command command;
-
-        public MenuItem(String promptname, char keycode) {
-            name = promptname;
-            code = keycode;
-        }
-
-        public void PrintPrompt() {
-            System.out.printf("[%s] %s.\n", code, name);
-        }
-
-        public boolean Check(char checkCode) {
-            if (code == checkCode) {
-                System.out.printf("Selected: %s.\n", name);
-                return true;
-            } else {
-                return false;
-            }
-        }
-
-        public boolean IsAvailable(boolean connected) {
-            return !needsController || connected;
-        }
-
-        public void Run(Object data) {
-            //System.out.printf("> %s\n", name);
-            execute(data);
-        }
-
-        @Override
-        public void execute(Object data) {
-            if (command != null) {
-                command.execute(data);
-            } else {
-                System.out.printf("ERROR: %s is not implemented!", name);
-            }
-        }// TODO: wrap this in another function to call that auto checks? 
-    }
-
     public static void Menu() throws IOException, Exception {
 
         String trainingDataLoc = null;
@@ -153,9 +105,8 @@ public class Main {
                 System.out.println("Finishing recording of training data");
                 leapSensor.FinishDataFile();
                 isRecordingTrainingData = false;
-                //trainingDataLoc = leapSensor.savePath; // do we need this?
                 // TODO: delete file if empty (and better names)
-                //TODO auto stop if not connected?
+                // TODO auto stop if not connected?
             }
         };
 
@@ -166,7 +117,6 @@ public class Main {
             if (isConnected) {
                 System.out.println("CONNECTED");
             } else {
-                //System.out.println("Connect to a LEAP motion sensor for more options");
                 System.out.println("DISCONNECTED");
             }
             if (isRecordingTrainingData) {
@@ -231,20 +181,65 @@ public class Main {
             }
 
             // wait for next command
-            //TODO: look into clearing console
+            // TODO: look into clearing console
             if (running && found) {
                 System.out.print("\n");
-                for (int i = 0; i < 2; i++) {
-                    System.out.print(".");
-                    try {
-                        Thread.sleep(1000);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                System.out.print(".");
+                try {
+                    Thread.sleep(1000);
+                } catch (Exception e) {
                 }
             }
             System.out.print("\n------------------------------------------------------------------\n");
         }
+    }
+
+    public interface Command {
+        public abstract void execute(Object data);
+    }
+
+    public static class MenuItem implements Command {
+        public String name = "Do this";
+        public char code = 'k';
+        public boolean enabled = false;
+        public boolean needsController = false;
+        public Command command;
+
+        public MenuItem(String promptname, char keycode) {
+            name = promptname;
+            code = keycode;
+        }
+
+        public void PrintPrompt() {
+            System.out.printf("[%s] %s.\n", code, name);
+        }
+
+        public boolean Check(char checkCode) {
+            if (code == checkCode) {
+                System.out.printf("Selected: %s.\n", name);
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        public boolean IsAvailable(boolean connected) {
+            return !needsController || connected;
+        }
+
+        public void Run(Object data) {
+            //System.out.printf("> %s\n", name);
+            execute(data);
+        }
+
+        @Override
+        public void execute(Object data) {
+            if (command != null) {
+                command.execute(data);
+            } else {
+                System.out.printf("ERROR: %s is not implemented!", name);
+            }
+        }// TODO: wrap this in another function to call that auto checks? 
     }
 
     public static class RecordTestData extends MenuItem {
@@ -381,7 +376,6 @@ public class Main {
             fileLoc += scanner.next();
             System.out.println("loading file at:" + fileLoc);
             ml.LoadTrainingData(fileLoc);
-            //System.out.println("data loaded, press [y] to build the model");
             System.out.println("Training Data loaded, please build model");
             //BuildModel.execute(null);
         }
@@ -400,11 +394,11 @@ public class Main {
             try {
                 String sIn = scanner.next().toLowerCase();
                 if (!sIn.contains(".csv")) {
-                    sIn = "_";
+                    sIn += ".csv";
                 }
                 leapSensor.StartDataFile(true, saveLoc, sIn);
             } catch (FileNotFoundException e) {
-                e.printStackTrace();
+                System.out.println(e);
             }
         }
     }
@@ -418,6 +412,7 @@ public class Main {
             needsController = true;
         }
 
+        @Override
         public void execute(Object data) {
             //boolean multiple = (boolean) data;
             int numSigns = 1;
@@ -456,7 +451,7 @@ public class Main {
         if (leapSensor.HasData()) {
             leapSensor.SaveRecording();
         }
-        if (sign != "_") {
+        if (sign.equals("_")) {
             System.out.println("\nSign " + sign);
         }
         if (delay > 1) {
@@ -465,15 +460,14 @@ public class Main {
                 try {
                     Thread.sleep(1000);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    System.out.println(e);
                 }
             }
         }
-        //System.out.println("Record!");
         try {
             Record(sign, nframes);
         } catch (InterruptedException | IOException e) {
-            e.printStackTrace();
+            System.out.println(e);
         }
     }
 
@@ -507,11 +501,11 @@ public class Main {
                         break;
                     }
                 } else {
-                    // TODO: record mode for no hands
                     if (System.in.available() > 0) {
                         exit = true;
                         break;
                     }
+                    // TODO: identify when there are no hands and stop
                 }
             } else {
                 framesLeft--;
@@ -520,7 +514,9 @@ public class Main {
                     break;
                 }
             }
-            boolean gotFrame = Update();
+            
+            Frame frame = controller.frame();
+            boolean gotFrame = leapSensor.ProcessFrame(frame);
             if (!gotFrame) {
                 framesLeft++;
                 //System.out.println("Hand not detected! No data recorded.");
@@ -530,6 +526,7 @@ public class Main {
                 }
                 System.out.print("\n");
             } else {
+                // for debugging
                 if (nframes >= 100 && framesLeft % 10 == 0) {
                     //System.out.println("frame " + (nframes - framesLeft));
                 }
@@ -545,11 +542,5 @@ public class Main {
         leapSensor.StopRecording();
         
         System.out.println("Done recording");
-        
-    }
-
-    public static boolean Update() {
-        Frame frame = controller.frame();
-        return leapSensor.ProcessFrame(frame);
     }
 }

@@ -9,7 +9,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ArrayList;
 
-
 public class LeapSensor {
     
     public long lastFrameID = 0;
@@ -63,7 +62,7 @@ public class LeapSensor {
     }
     void RecordHand(Hand hand) {
         if (hand==null) {
-            // there are 60 records added
+            // there are 60 records added per hand
             for (int i=0; i<60; i++) {
                 records.add(0f);
             }
@@ -119,18 +118,19 @@ public class LeapSensor {
             records.add(fVel.getZ());
         }
     }
+    
     public boolean HandAvailable(Frame frame) {
         Hand hand = frame.hands().frontmost();
         return hand.isValid();
     }
-
+    
     // start recording with the leap
     public void StartRecording(String signLabel) {
         recording = true;
         lastFrameID = 0;
         ClearRecording();
         if (signLabel == "") {
-            // use the last sign 
+            // TODO: use the last sign 
         } else {
             sign = signLabel;
         }
@@ -156,9 +156,11 @@ public class LeapSensor {
     public boolean HasData() {
         return !records.isEmpty();
     }
+    
     public void StartDataFile(boolean isTrainingData, String saveLoc) throws FileNotFoundException {
         StartDataFile(isTrainingData, saveLoc, "_");
     }
+    
     public void StartDataFile(boolean isTrainingData, String saveLoc, String filename) throws FileNotFoundException {
         String fname = "";
         if (filename=="_") {
@@ -182,28 +184,7 @@ public class LeapSensor {
         System.out.println(fname);
         openFile = new PrintWriter(new File(fname));
         isFileOpen = true;
-        StringBuilder sb = new StringBuilder();
-        sb.append("id,");
-        //TODO: see weka api for what to include
-        sb.append("time,");
-        sb.append("cur_frame,");
-        // TODO: relative time? time since last frame
-        sb.append("total_frames,");
-        AddPosRot(sb, "rarm");
-        AddPosRotVel(sb, "rhand");
-        for (int i = 1; i <= 5; i++) {
-            AddPosRotVel(sb, "rfinger" + i);
-        }
-        AddPosRot(sb, "larm");
-        AddPosRotVel(sb, "lhand");
-        for (int i = 1; i <= 5; i++) {
-            AddPosRotVel(sb, "lfinger" + i);
-        }
-        if (isTrainingData) {
-            sb.append("sign");
-        }
-        sb.append('\n');
-        openFile.write(sb.toString());
+        AddHeaderLine();
     }
 
     public void FinishDataFile() {
@@ -249,8 +230,31 @@ public class LeapSensor {
         ClearRecording();
     }
     public float LoadDataAt(int recordsIndex){
-        //TODO: average out data?
+        //TODO: average out data first?
         return records.get(recordsIndex);
+    }
+    
+    void AddHeaderLine() {
+        StringBuilder sb = new StringBuilder();
+        // add header line of all features to file
+        sb.append("id,");
+        //TODO: see weka api for what else to include
+        sb.append("time,");
+        sb.append("cur_frame,");
+        // TODO: relative time? time since last frame
+        sb.append("total_frames,");
+        AddPosRot(sb, "rarm");
+        AddPosRotVel(sb, "rhand");
+        for (int i = 1; i <= 5; i++) {
+            AddPosRotVel(sb, "rfinger" + i);
+        }
+        AddPosRot(sb, "larm");
+        AddPosRotVel(sb, "lhand");
+        for (int i = 1; i <= 5; i++) {
+            AddPosRotVel(sb, "lfinger" + i);
+        }
+        sb.append('\n');
+        openFile.write(sb.toString());
     }
     void AddPosRot(StringBuilder sb, String name) {
         sb.append(name);
@@ -266,7 +270,6 @@ public class LeapSensor {
         sb.append(name);
         sb.append("_pitch,");
     }
-
     void AddPosRotVel(StringBuilder sb, String name) {
         AddPosRot(sb, name);
         sb.append(name);
