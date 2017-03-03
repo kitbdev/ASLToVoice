@@ -359,6 +359,18 @@ public class Main {
             System.out.print("Enter Something: ");
             String say = scanner.next();
             tts.speak(say);
+            if(say.equals("loopme"))
+            {
+                while (true)
+                {
+                    say = scanner.next();
+                    tts.speak(say);
+                    if (say.equals("exit"))
+                    {
+                        return;
+                    }
+                }
+            }
             System.out.println("\nsaid it!");
         }
     }
