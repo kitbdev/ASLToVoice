@@ -12,12 +12,12 @@ public class SignData {
     public FrameData.Vector3 totalHandMovement;
     public ArrayList<FrameData> frames;
     
-    public double[] GetAllData() {
-        double[] data = new double[2];
+    public String GetAllData() {
+        StringBuilder sb = new StringBuilder();
         for (int i=0; i<frames.size(); i++) {
-//            data+=frames.get(i).GetDoubleData();
+            sb.append(frames.get(i).GetData());
         }
-        return data;
+        return sb.toString();
     }
     
     public void AddFrame(FrameData frame) {

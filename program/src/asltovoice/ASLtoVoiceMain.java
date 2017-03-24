@@ -12,8 +12,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.ArrayList;
 
 
 /*
@@ -30,6 +29,7 @@ public class ASLtoVoiceMain {
     public static GestureInterpreter gestureInterpreter = new GestureInterpreter();
     
     public static SignData curSign = new SignData();
+    public static ArrayList<SignData> allSigns = new ArrayList<SignData>();
     
     public static boolean devMode = true; // enables saving to a file for recording training data
     public static boolean running = true;
@@ -109,6 +109,7 @@ public class ASLtoVoiceMain {
                 if (gestureInterpreter.IsSignOver(leapSensor.curFrame)) {
                     gestureInterpreter.ClassifyGesture(curSign);
                     //break; // TODO continuous sign detection
+                    allSigns.add(curSign);
                 } else {
                     curSign.AddFrame(leapSensor.curFrame);
                 }
@@ -134,7 +135,6 @@ public class ASLtoVoiceMain {
     }
     static void Save(String fname) {
         StringBuilder sb = new StringBuilder();
-//        FrameData[] frames = hmm.GetFrames();
 
         //create file
         String filename = "";
@@ -150,7 +150,6 @@ public class ASLtoVoiceMain {
         }
         filename += ".csv";
         
-        System.out.println("New file is: ");
         System.out.println(filename);
         PrintWriter openFile;
         try {
@@ -164,7 +163,9 @@ public class ASLtoVoiceMain {
         sb.append(curSign.frames.get(0).GetHeaderLine());
         sb.append('\n');
         
-        sb.append(curSign.GetAllData());// string one
+        for (int i=0; i<allSigns.size(); i++) {
+            sb.append(allSigns.get(i).GetAllData());
+        }
 //        int numFrames = frames.length;
 //        for (int i = 0; i < numFrames; i++) {
 //            sb.append(frames[i].GetData());

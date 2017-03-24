@@ -35,6 +35,21 @@ public class GestureInterpreter {
         SetClassificationType(classficationType);
     }
     
+    void LoadData(String fileLoc) {
+        try {
+            ConverterUtils.DataSource src = new ConverterUtils.DataSource(fileLoc);
+            System.out.println("loaded file ");
+            trainingData = src.getDataSet();
+        } catch (Exception e) {
+            System.out.println(e);
+            return;
+        }
+        // set class index because this is not an ARFF
+        if (trainingData.classIndex() == -1) {
+            trainingData.setClassIndex(trainingData.numAttributes() - 1);
+        }
+    }
+    
     ClassificationType GetClassificationType() {
         return classficationType;
     }
@@ -67,8 +82,19 @@ public class GestureInterpreter {
         return !isMoving;
     }
     
-    
     void ClassifyGesture(SignData gesture) {
-       
+        DenseInstance di = new DenseInstance(trainingData.numAttributes());
+        try {
+            int classIndex = (int) classifier.classifyInstance(di);
+            double[] probDist = classifier.distributionForInstance(di);
+            trainingData.classAttribute().value(classIndex);
+            double choosenDist = probDist[classIndex]*100;
+            for (int i=0; i<probDist.length; i++){
+                (float)((int)(mlpDist[i]*10000))/100
+            }
+        } catch (Exception e) {
+            System.out.println(e);
+            return;
+        }        
     }
 }
