@@ -1,14 +1,12 @@
 package asltovoice;
 
-// holds all of the data for a sign
-// hands, arm, fingers pos, rot, and vel over the full length of the recording
-// time taken, number of frames, and other needed info
+// holds the raw data taken from the leap motion sensor
 public class FrameData {
     //TODO: two hands
     public int id;
     public long time; // time since start of recording in ms
     public int curframe;
-    public int totalframes;
+    public int totalframes;// TODO: move this to sign data only
     public Vector3 armPos;
     public Vector3 armRot;
     public Vector3 handPos;
@@ -18,6 +16,7 @@ public class FrameData {
     public Vector3[] fingerRot = new Vector3[5];
     public Vector3[] fingerVel = new Vector3[5];
     public String sign;
+    
     public class Vector3 {
         float x;
         float y;
@@ -25,6 +24,9 @@ public class FrameData {
         public Vector3(){
             x = 0; y = 0; z = 0;
         };
+        public float magnitude() {
+            return (float) Math.sqrt(x*x+y*y+z*z);
+        }
     }
     Vector3 zero = new Vector3();
 
@@ -128,6 +130,43 @@ public class FrameData {
         }
         sb.append(sign);
         return sb.toString();
+    }
+    // Saves variables into a double array
+    public double[] GetDoubleData() {
+        double[] data = new double[64];
+        int n = 0;
+        data[n++] = (id);
+        data[n++] = (time);
+        data[n++] = (curframe);
+        data[n++] = (totalframes);
+        data[n++] = (armPos.x);
+        data[n++] = (armPos.y);
+        data[n++] = (armPos.z);
+        data[n++] = (armRot.x);
+        data[n++] = (armRot.y);
+        data[n++] = (armRot.z);
+        data[n++] = (handPos.x);
+        data[n++] = (handPos.y);
+        data[n++] = (handPos.z);
+        data[n++] = (handRot.x);
+        data[n++] = (handRot.y);
+        data[n++] = (handRot.z);
+        data[n++] = (handVel.x);
+        data[n++] = (handVel.y);
+        data[n++] = (handVel.z);
+        for (int i=0;i<5;i++)
+        {
+            data[n++] = (fingerPos[i].x);
+            data[n++] = (fingerPos[i].y);
+            data[n++] = (fingerPos[i].z);
+            data[n++] = (fingerRot[i].x);
+            data[n++] = (fingerRot[i].y);
+            data[n++] = (fingerRot[i].z);
+            data[n++] = (fingerVel[i].x);
+            data[n++] = (fingerVel[i].y);
+            data[n++] = (fingerVel[i].z);
+        }
+        return data;
     }
     public String GetHeaderLine() {
         String header = "";

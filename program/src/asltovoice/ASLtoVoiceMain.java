@@ -15,11 +15,19 @@ import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+
+/*
+Start point of application
+creates other classes
+contains Command line interface
+saves and loads csv files
+record loop
+*/
 public class ASLtoVoiceMain {
 
     public static Scanner scanner = new Scanner(System.in);
-    public static HMM hmm = new HMM();
     public static LeapSensor leapSensor = new LeapSensor();
+    public static GestureInterpreter gestureInterpreter = new GestureInterpreter();
     
     public static boolean devMode = true; // enables saving to a file for recording training data
     public static boolean running = true;
@@ -82,27 +90,22 @@ public class ASLtoVoiceMain {
     }
     static void Record(String sign) throws InterruptedException {
         System.out.println("Recording " + sign);
-        hmm.Clear();
         leapSensor.StartRecording(sign);
         while (true) {
             long frameStart = System.currentTimeMillis();
             
-            if (hmm.SignEnded()) {
-                break;
-            }
-            
             boolean gotFrame = leapSensor.RecordFrame();
-            if (!gotFrame) {
+            if (gotFrame) {
+                gestureInterpreter.IsSignOver(leapSensor.curFrame);
+                //System.out.print(framesLeft+", \n");
+                System.out.print("\n");
+            } else {
                 System.out.println("Hand not detected! No data recorded.");
                 while (!leapSensor.HandAvailable()) {
                     System.out.print(".");
                     Thread.sleep(100);
                 }
                 // TODO: if we didnt get frame this should stop ?
-                System.out.print("\n");
-            } else {
-                hmm.Analyze(leapSensor.GetCurFrame());
-                //System.out.print(framesLeft+", \n");
             }
             
             long timeTaken = System.currentTimeMillis() - frameStart;
@@ -116,12 +119,13 @@ public class ASLtoVoiceMain {
     }
     static void Save(String fname) {
         StringBuilder sb = new StringBuilder();
-        FrameData[] frames = hmm.GetFrames();
+//        FrameData[] frames = hmm.GetFrames();
+        SignData sign = ml.GetCurrentSign();
 
         //create file
         String filename = "";
         filename += saveLoc;
-        if (fname=="") {
+        if ("".equals(fname)) {
             filename += "td_";
             LocalDateTime date = LocalDateTime.now();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("kkmmss_ddMMyy");//hourminutesecond_daymonthyear
@@ -143,17 +147,18 @@ public class ASLtoVoiceMain {
         }
         // add data to the file
         // add header line
-        frames[0].GetHeaderLine();
+        sb.append(sign.frames.get(0).GetHeaderLine());
         sb.append('\n');
         
-        int numFrames = frames.length;
-        for (int i = 0; i < numFrames; i++) {
-            sb.append(frames[i].GetData());
-            sb.append('\n');
-        }
+        sb.append(sign.GetAllData());// string one
+//        int numFrames = frames.length;
+//        for (int i = 0; i < numFrames; i++) {
+//            sb.append(frames[i].GetData());
+//            sb.append('\n');
+//        }
         openFile.write(sb.toString());
         openFile.close();
-        hmm.Clear();
+//        hmm.Clear();
         System.out.println("Saved!");
     }
     static void Load(String fn) {

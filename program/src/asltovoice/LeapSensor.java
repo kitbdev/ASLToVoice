@@ -2,13 +2,15 @@ package asltovoice;
 
 import com.leapmotion.leap.*;
 
+
+// Collects data from the leap Sensor
 public class LeapSensor {
     
     public static Controller controller = new Controller();
     
     public long lastFrameID = 0;
     boolean recording = false;
-    FrameData curFrame;
+    public FrameData curFrame;
     long recordStartTimeN = 0;
     int numFrames = 0;
     
@@ -134,7 +136,4 @@ public class LeapSensor {
         curFrame.ClearData();
     }
     
-    public FrameData GetCurFrame() {
-        return curFrame;
-    }
 }

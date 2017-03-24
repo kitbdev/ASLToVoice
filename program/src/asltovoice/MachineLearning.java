@@ -3,15 +3,21 @@
 //import java.util.HashMap;
 //import java.util.logging.Level;
 //import java.util.logging.Logger;
-//import weka.classifiers.Classifier;
 //
+//import weka.classifiers.Classifier;
 //import weka.classifiers.Evaluation;
-//import weka.classifiers.lazy.IBk;
-//import weka.classifiers.functions.MultilayerPerceptron;
 //import weka.core.DenseInstance;
 //import weka.core.Instances;
 //import weka.core.converters.ConverterUtils;
 //
+//import weka.classifiers.lazy.IBk;
+//import weka.classifiers.functions.MultilayerPerceptron;
+//import weka.classifiers.trees.J48;
+//import weka.classifiers.bayes.NaiveBayes;
+//import weka.classifiers.functions.LinearRegression;
+//import weka.classifiers.functions.SMO;
+//
+//// needs to be redone
 //public class MachineLearning {
 //
 //    public Classifier classifier;
@@ -70,6 +76,8 @@
 //        }
 //    }
 //    public void Classify(double[] data) {
+//        // TODO: use classifier dynamically
+//        // TODO: use frame data
 //        // TODO: pass in multiple rows of data for time
 //        // TODO: releif algorithm
 //        // to do do this somewhere else?
@@ -216,6 +224,4 @@
 //        double[] classProb = {majorityClass, prob};
 //        return classProb;
 //    }
-//
-//
 //}
