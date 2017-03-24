@@ -29,6 +29,8 @@ public class ASLtoVoiceMain {
     public static LeapSensor leapSensor = new LeapSensor();
     public static GestureInterpreter gestureInterpreter = new GestureInterpreter();
     
+    public static SignData curSign = new SignData();
+    
     public static boolean devMode = true; // enables saving to a file for recording training data
     public static boolean running = true;
     public static long POLLRATE = 50;//ms
@@ -83,20 +85,33 @@ public class ASLtoVoiceMain {
             }
         }
         try {
-            Record(sign);
+            try {
+                Record(sign);
+            } catch (IOException ex) {
+                System.out.println(ex);
+            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
-    static void Record(String sign) throws InterruptedException {
+    static void Record(String sign) throws InterruptedException, IOException {
         System.out.println("Recording " + sign);
         leapSensor.StartRecording(sign);
         while (true) {
             long frameStart = System.currentTimeMillis();
             
+            if (System.in.available()>0) {
+                break;
+            }
+            
             boolean gotFrame = leapSensor.RecordFrame();
             if (gotFrame) {
-                gestureInterpreter.IsSignOver(leapSensor.curFrame);
+                if (gestureInterpreter.IsSignOver(leapSensor.curFrame)) {
+                    gestureInterpreter.ClassifyGesture(curSign);
+                    //break; // TODO continuous sign detection
+                } else {
+                    curSign.AddFrame(leapSensor.curFrame);
+                }
                 //System.out.print(framesLeft+", \n");
                 System.out.print("\n");
             } else {
@@ -120,7 +135,6 @@ public class ASLtoVoiceMain {
     static void Save(String fname) {
         StringBuilder sb = new StringBuilder();
 //        FrameData[] frames = hmm.GetFrames();
-        SignData sign = ml.GetCurrentSign();
 
         //create file
         String filename = "";
@@ -147,10 +161,10 @@ public class ASLtoVoiceMain {
         }
         // add data to the file
         // add header line
-        sb.append(sign.frames.get(0).GetHeaderLine());
+        sb.append(curSign.frames.get(0).GetHeaderLine());
         sb.append('\n');
         
-        sb.append(sign.GetAllData());// string one
+        sb.append(curSign.GetAllData());// string one
 //        int numFrames = frames.length;
 //        for (int i = 0; i < numFrames; i++) {
 //            sb.append(frames[i].GetData());

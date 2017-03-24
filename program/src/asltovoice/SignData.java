@@ -20,4 +20,9 @@ public class SignData {
         return data;
     }
     
+    public void AddFrame(FrameData frame) {
+        // TODO check data or something
+        frames.add(frame);
+    }
+    
 }
