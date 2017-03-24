@@ -1,5 +1,5 @@
 /******************************************************************************\
-* Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.               *
+* Copyright (C) 2012-2016 Leap Motion, Inc. All rights reserved.               *
 * Leap Motion proprietary and confidential. Not for distribution.              *
 * Use subject to the terms of the Leap Motion SDK Agreement available at       *
 * https://developer.leapmotion.com/sdk_agreement, or another agreement         *
@@ -9,184 +9,150 @@ using System;
 using System.Threading;
 using Leap;
 
-class SampleListener : Listener
+class SampleListener
 {
-	private Object thisLock = new Object ();
+  public void OnInit(Controller controller)
+  {
+    Console.WriteLine("Initialized");
+  }
 
-	private void SafeWriteLine (String line)
-	{
-		lock (thisLock) {
-			Console.WriteLine (line);
-		}
-	}
+  public void OnConnect(object sender, DeviceEventArgs args)
+  {
+    Console.WriteLine("Connected");
+  }
 
-	public override void OnInit (Controller controller)
-	{
-		SafeWriteLine ("Initialized");
-	}
+  public void OnDisconnect(object sender, DeviceEventArgs args)
+  {
+    Console.WriteLine("Disconnected");
+  }
 
-	public override void OnConnect (Controller controller)
-	{
-		SafeWriteLine ("Connected");
-		controller.EnableGesture (Gesture.GestureType.TYPE_CIRCLE);
-		controller.EnableGesture (Gesture.GestureType.TYPE_KEY_TAP);
-		controller.EnableGesture (Gesture.GestureType.TYPE_SCREEN_TAP);
-		controller.EnableGesture (Gesture.GestureType.TYPE_SWIPE);
-	}
+  public void OnFrame(object sender, FrameEventArgs args)
+  {
+    // Get the most recent frame and report some basic information
+    Frame frame = args.frame;
 
-	public override void OnDisconnect (Controller controller)
-	{
-        //Note: not dispatched when running in a debugger.
-		SafeWriteLine ("Disconnected");
-	}
+    Console.WriteLine(
+      "Frame id: {0}, timestamp: {1}, hands: {2}",
+      frame.Id, frame.Timestamp, frame.Hands.Count
+    );
 
-	public override void OnExit (Controller controller)
-	{
-		SafeWriteLine ("Exited");
-	}
+    foreach (Hand hand in frame.Hands)
+    {
+      Console.WriteLine("  Hand id: {0}, palm position: {1}, fingers: {2}",
+        hand.Id, hand.PalmPosition, hand.Fingers.Count);
+      // Get the hand's normal vector and direction
+      Vector normal = hand.PalmNormal;
+      Vector direction = hand.Direction;
 
-	public override void OnFrame (Controller controller)
-	{
-		// Get the most recent frame and report some basic information
-		Frame frame = controller.Frame ();
+      // Calculate the hand's pitch, roll, and yaw angles
+      Console.WriteLine(
+        "  Hand pitch: {0} degrees, roll: {1} degrees, yaw: {2} degrees",
+        direction.Pitch * 180.0f / (float)Math.PI,
+        normal.Roll * 180.0f / (float)Math.PI,
+        direction.Yaw * 180.0f / (float)Math.PI
+      );
 
-		SafeWriteLine ("Frame id: " + frame.Id
-                    + ", timestamp: " + frame.Timestamp
-                    + ", hands: " + frame.Hands.Count
-                    + ", fingers: " + frame.Fingers.Count
-                    + ", tools: " + frame.Tools.Count
-                    + ", gestures: " + frame.Gestures ().Count);
+      // Get the Arm bone
+      Arm arm = hand.Arm;
+      Console.WriteLine(
+        "  Arm direction: {0}, wrist position: {1}, elbow position: {2}",
+        arm.Direction, arm.WristPosition, arm.ElbowPosition
+      );
 
-		foreach (Hand hand in frame.Hands) {
-			SafeWriteLine ("  Hand id: " + hand.Id
-						+ ", palm position: " + hand.PalmPosition);
-			// Get the hand's normal vector and direction
-			Vector normal = hand.PalmNormal;
-			Vector direction = hand.Direction;
+      // Get fingers
+      foreach (Finger finger in hand.Fingers)
+      {
+        Console.WriteLine(
+          "    Finger id: {0}, {1}, length: {2}mm, width: {3}mm",
+          finger.Id,
+          finger.Type.ToString(),
+          finger.Length,
+          finger.Width
+        );
 
-			// Calculate the hand's pitch, roll, and yaw angles
-			SafeWriteLine ("  Hand pitch: " + direction.Pitch * 180.0f / (float)Math.PI + " degrees, "
-                        + "roll: " + normal.Roll * 180.0f / (float)Math.PI + " degrees, "
-                        + "yaw: " + direction.Yaw * 180.0f / (float)Math.PI + " degrees");
+        // Get finger bones
+        Bone bone;
+        for (int b = 0; b < 4; b++)
+        {
+          bone = finger.Bone ((Bone.BoneType)b);
+          Console.WriteLine (
+            "      Bone: {0}, start: {1}, end: {2}, direction: {3}",
+            bone.Type, bone.PrevJoint, bone.NextJoint, bone.Direction
+          );
+        }
+      }
+    }
 
-			// Get the Arm bone
-            Arm arm = hand.Arm;
-			SafeWriteLine ("  Arm direction: " + arm.Direction
-                        + ", wrist position: " + arm.WristPosition
-                        + ", elbow position: " + arm.ElbowPosition);
+    if (frame.Hands.Count != 0)
+    {
+      Console.WriteLine("");
+    }
+  }
 
-			// Get fingers
-			foreach (Finger finger in hand.Fingers) {
-				SafeWriteLine ("    Finger id: " + finger.Id
-					        + ", " + finger.Type.ToString()
-					        + ", length: " + finger.Length
-					        + "mm, width: " + finger.Width + "mm");
+  public void OnServiceConnect(object sender, ConnectionEventArgs args)
+  {
+    Console.WriteLine("Service Connected");
+  }
 
-				// Get finger bones
-				Bone bone;
-				foreach (Bone.BoneType boneType in (Bone.BoneType[]) Enum.GetValues(typeof(Bone.BoneType)))
-				{
-					bone = finger.Bone(boneType);
-					SafeWriteLine("      Bone: " + boneType
-						        + ", start: " + bone.PrevJoint
-						        + ", end: " + bone.NextJoint
-						        + ", direction: " + bone.Direction);
-				}
-			}
+  public void OnServiceDisconnect(object sender, ConnectionLostEventArgs args)
+  {
+    Console.WriteLine("Service Disconnected");
+  }
 
-		}
+  public void OnServiceChange(Controller controller)
+  {
+    Console.WriteLine("Service Changed");
+  }
 
-		// Get tools
-		foreach (Tool tool in frame.Tools) {
-			SafeWriteLine ("  Tool id: " + tool.Id
-				        + ", position: " + tool.TipPosition
-				        + ", direction " + tool.Direction);
-		}
+  public void OnDeviceFailure(object sender, DeviceFailureEventArgs args)
+  {
+    Console.WriteLine("Device Error");
+    Console.WriteLine("  PNP ID:" + args.DeviceSerialNumber);
+    Console.WriteLine("  Failure message:" + args.ErrorMessage);
+  }
 
-		// Get gestures
-		GestureList gestures = frame.Gestures ();
-		for (int i = 0; i < gestures.Count; i++) {
-			Gesture gesture = gestures [i];
-
-			switch (gesture.Type) {
-			case Gesture.GestureType.TYPE_CIRCLE:
-				CircleGesture circle = new CircleGesture (gesture);
-
-                // Calculate clock direction using the angle between circle normal and pointable
-				String clockwiseness;
-				if (circle.Pointable.Direction.AngleTo (circle.Normal) <= Math.PI / 2) {
-					//Clockwise if angle is less than 90 degrees
-					clockwiseness = "clockwise";
-				} else {
-					clockwiseness = "counterclockwise";
-				}
-
-				float sweptAngle = 0;
-
-                // Calculate angle swept since last frame
-				if (circle.State != Gesture.GestureState.STATE_START) {
-					CircleGesture previousUpdate = new CircleGesture (controller.Frame (1).Gesture (circle.Id));
-					sweptAngle = (circle.Progress - previousUpdate.Progress) * 360;
-				}
-
-				SafeWriteLine ("  Circle id: " + circle.Id
-                               + ", " + circle.State
-                               + ", progress: " + circle.Progress
-                               + ", radius: " + circle.Radius
-                               + ", angle: " + sweptAngle
-                               + ", " + clockwiseness);
-				break;
-			case Gesture.GestureType.TYPE_SWIPE:
-				SwipeGesture swipe = new SwipeGesture (gesture);
-				SafeWriteLine ("  Swipe id: " + swipe.Id
-                               + ", " + swipe.State
-                               + ", position: " + swipe.Position
-                               + ", direction: " + swipe.Direction
-                               + ", speed: " + swipe.Speed);
-				break;
-			case Gesture.GestureType.TYPE_KEY_TAP:
-				KeyTapGesture keytap = new KeyTapGesture (gesture);
-				SafeWriteLine ("  Tap id: " + keytap.Id
-                               + ", " + keytap.State
-                               + ", position: " + keytap.Position
-                               + ", direction: " + keytap.Direction);
-				break;
-			case Gesture.GestureType.TYPE_SCREEN_TAP:
-				ScreenTapGesture screentap = new ScreenTapGesture (gesture);
-				SafeWriteLine ("  Tap id: " + screentap.Id
-                               + ", " + screentap.State
-                               + ", position: " + screentap.Position
-                               + ", direction: " + screentap.Direction);
-				break;
-			default:
-				SafeWriteLine ("  Unknown gesture type.");
-				break;
-			}
-		}
-
-		if (!frame.Hands.IsEmpty || !frame.Gestures ().IsEmpty) {
-			SafeWriteLine ("");
-		}
-	}
+  public void OnLogMessage(object sender, LogEventArgs args)
+  {
+    switch (args.severity)
+    {
+      case Leap.MessageSeverity.MESSAGE_CRITICAL:
+        Console.WriteLine("[Critical]");
+        break;
+      case Leap.MessageSeverity.MESSAGE_WARNING:
+        Console.WriteLine("[Warning]");
+        break;
+      case Leap.MessageSeverity.MESSAGE_INFORMATION:
+        Console.WriteLine("[Info]");
+        break;
+      case Leap.MessageSeverity.MESSAGE_UNKNOWN:
+        Console.WriteLine("[Unknown]");
+        break;
+    }
+    Console.WriteLine("[{0}] {1}", args.timestamp, args.message);
+  }
 }
 
 class Sample
 {
-	public static void Main ()
-	{
-		// Create a sample listener and controller
-		SampleListener listener = new SampleListener ();
-		Controller controller = new Controller ();
+  public static void Main()
+  {
+    using (Leap.IController controller = new Leap.Controller())
+    {
+      controller.SetPolicy(Leap.Controller.PolicyFlag.POLICY_ALLOW_PAUSE_RESUME);
 
-		// Have the sample listener receive events from the controller
-		controller.AddListener (listener);
+      // Set up our listener:
+      SampleListener listener = new SampleListener();
+      controller.Connect += listener.OnServiceConnect;
+      controller.Disconnect += listener.OnServiceDisconnect;
+      controller.FrameReady += listener.OnFrame;
+      controller.Device += listener.OnConnect;
+      controller.DeviceLost += listener.OnDisconnect;
+      controller.DeviceFailure += listener.OnDeviceFailure;
+      controller.LogMessage += listener.OnLogMessage;
 
-		// Keep this process running until Enter is pressed
-		Console.WriteLine ("Press Enter to quit...");
-		Console.ReadLine ();
-
-		// Remove the sample listener when done
-		controller.RemoveListener (listener);
-		controller.Dispose ();
-	}
+      // Keep this process running until Enter is pressed
+      Console.WriteLine("Press any key to quit...");
+      Console.ReadLine();
+    }
+  }
 }
