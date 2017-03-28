@@ -1,5 +1,5 @@
 /******************************************************************************\
-* Copyright (C) 2012-2014 Leap Motion, Inc. All rights reserved.               *
+* Copyright (C) 2012-2016 Leap Motion, Inc. All rights reserved.               *
 * Leap Motion proprietary and confidential. Not for distribution.              *
 * Use subject to the terms of the Leap Motion SDK Agreement available at       *
 * https://developer.leapmotion.com/sdk_agreement, or another agreement         *
@@ -24,13 +24,13 @@ class SampleListener : public Listener {
     virtual void onDeviceChange(const Controller&);
     virtual void onServiceConnect(const Controller&);
     virtual void onServiceDisconnect(const Controller&);
-
-  private:
+    virtual void onServiceChange(const Controller&);
+    virtual void onDeviceFailure(const Controller&);
+    virtual void onLogMessage(const Controller&, MessageSeverity severity, int64_t timestamp, const char* msg);
 };
 
 const std::string fingerNames[] = {"Thumb", "Index", "Middle", "Ring", "Pinky"};
 const std::string boneNames[] = {"Metacarpal", "Proximal", "Middle", "Distal"};
-const std::string stateNames[] = {"STATE_INVALID", "STATE_START", "STATE_UPDATE", "STATE_END"};
 
 void SampleListener::onInit(const Controller& controller) {
   std::cout << "Initialized" << std::endl;
@@ -38,10 +38,6 @@ void SampleListener::onInit(const Controller& controller) {
 
 void SampleListener::onConnect(const Controller& controller) {
   std::cout << "Connected" << std::endl;
-  controller.enableGesture(Gesture::TYPE_CIRCLE);
-  controller.enableGesture(Gesture::TYPE_KEY_TAP);
-  controller.enableGesture(Gesture::TYPE_SCREEN_TAP);
-  controller.enableGesture(Gesture::TYPE_SWIPE);
 }
 
 void SampleListener::onDisconnect(const Controller& controller) {
@@ -59,9 +55,7 @@ void SampleListener::onFrame(const Controller& controller) {
   std::cout << "Frame id: " << frame.id()
             << ", timestamp: " << frame.timestamp()
             << ", hands: " << frame.hands().count()
-            << ", extended fingers: " << frame.fingers().extended().count()
-            << ", tools: " << frame.tools().count()
-            << ", gestures: " << frame.gestures().count() << std::endl;
+            << ", extended fingers: " << frame.fingers().extended().count() << std::endl;
 
   HandList hands = frame.hands();
   for (HandList::const_iterator hl = hands.begin(); hl != hands.end(); ++hl) {
@@ -106,84 +100,7 @@ void SampleListener::onFrame(const Controller& controller) {
     }
   }
 
-  // Get tools
-  const ToolList tools = frame.tools();
-  for (ToolList::const_iterator tl = tools.begin(); tl != tools.end(); ++tl) {
-    const Tool tool = *tl;
-    std::cout << std::string(2, ' ') <<  "Tool, id: " << tool.id()
-              << ", position: " << tool.tipPosition()
-              << ", direction: " << tool.direction() << std::endl;
-  }
-
-  // Get gestures
-  const GestureList gestures = frame.gestures();
-  for (int g = 0; g < gestures.count(); ++g) {
-    Gesture gesture = gestures[g];
-
-    switch (gesture.type()) {
-      case Gesture::TYPE_CIRCLE:
-      {
-        CircleGesture circle = gesture;
-        std::string clockwiseness;
-
-        if (circle.pointable().direction().angleTo(circle.normal()) <= PI/2) {
-          clockwiseness = "clockwise";
-        } else {
-          clockwiseness = "counterclockwise";
-        }
-
-        // Calculate angle swept since last frame
-        float sweptAngle = 0;
-        if (circle.state() != Gesture::STATE_START) {
-          CircleGesture previousUpdate = CircleGesture(controller.frame(1).gesture(circle.id()));
-          sweptAngle = (circle.progress() - previousUpdate.progress()) * 2 * PI;
-        }
-        std::cout << std::string(2, ' ')
-                  << "Circle id: " << gesture.id()
-                  << ", state: " << stateNames[gesture.state()]
-                  << ", progress: " << circle.progress()
-                  << ", radius: " << circle.radius()
-                  << ", angle " << sweptAngle * RAD_TO_DEG
-                  <<  ", " << clockwiseness << std::endl;
-        break;
-      }
-      case Gesture::TYPE_SWIPE:
-      {
-        SwipeGesture swipe = gesture;
-        std::cout << std::string(2, ' ')
-          << "Swipe id: " << gesture.id()
-          << ", state: " << stateNames[gesture.state()]
-          << ", direction: " << swipe.direction()
-          << ", speed: " << swipe.speed() << std::endl;
-        break;
-      }
-      case Gesture::TYPE_KEY_TAP:
-      {
-        KeyTapGesture tap = gesture;
-        std::cout << std::string(2, ' ')
-          << "Key Tap id: " << gesture.id()
-          << ", state: " << stateNames[gesture.state()]
-          << ", position: " << tap.position()
-          << ", direction: " << tap.direction()<< std::endl;
-        break;
-      }
-      case Gesture::TYPE_SCREEN_TAP:
-      {
-        ScreenTapGesture screentap = gesture;
-        std::cout << std::string(2, ' ')
-          << "Screen Tap id: " << gesture.id()
-          << ", state: " << stateNames[gesture.state()]
-          << ", position: " << screentap.position()
-          << ", direction: " << screentap.direction()<< std::endl;
-        break;
-      }
-      default:
-        std::cout << std::string(2, ' ')  << "Unknown gesture type." << std::endl;
-        break;
-    }
-  }
-
-  if (!frame.hands().isEmpty() || !gestures.isEmpty()) {
+  if (!frame.hands().isEmpty()) {
     std::cout << std::endl;
   }
 
@@ -204,6 +121,8 @@ void SampleListener::onDeviceChange(const Controller& controller) {
   for (int i = 0; i < devices.count(); ++i) {
     std::cout << "id: " << devices[i].toString() << std::endl;
     std::cout << "  isStreaming: " << (devices[i].isStreaming() ? "true" : "false") << std::endl;
+    std::cout << "  isSmudged:" << (devices[i].isSmudged() ? "true" : "false") << std::endl;
+    std::cout << "  isLightingBad:" << (devices[i].isLightingBad() ? "true" : "false") << std::endl;
   }
 }
 
@@ -213,6 +132,39 @@ void SampleListener::onServiceConnect(const Controller& controller) {
 
 void SampleListener::onServiceDisconnect(const Controller& controller) {
   std::cout << "Service Disconnected" << std::endl;
+}
+
+void SampleListener::onServiceChange(const Controller& controller) {
+  std::cout << "Service Changed" << std::endl;
+}
+
+void SampleListener::onDeviceFailure(const Controller& controller) {
+  std::cout << "Device Error" << std::endl;
+  const Leap::FailedDeviceList devices = controller.failedDevices();
+
+  for (FailedDeviceList::const_iterator dl = devices.begin(); dl != devices.end(); ++dl) {
+    const FailedDevice device = *dl;
+    std::cout << "  PNP ID:" << device.pnpId();
+    std::cout << "    Failure type:" << device.failure();
+  }
+}
+
+void SampleListener::onLogMessage(const Controller&, MessageSeverity s, int64_t t, const char* msg) {
+  switch (s) {
+  case Leap::MESSAGE_CRITICAL:
+    std::cout << "[Critical]";
+    break;
+  case Leap::MESSAGE_WARNING:
+    std::cout << "[Warning]";
+    break;
+  case Leap::MESSAGE_INFORMATION:
+    std::cout << "[Info]";
+    break;
+  case Leap::MESSAGE_UNKNOWN:
+    std::cout << "[Unknown]";
+  }
+  std::cout << "[" << t << "] ";
+  std::cout << msg << std::endl;
 }
 
 int main(int argc, char** argv) {
@@ -226,9 +178,22 @@ int main(int argc, char** argv) {
   if (argc > 1 && strcmp(argv[1], "--bg") == 0)
     controller.setPolicy(Leap::Controller::POLICY_BACKGROUND_FRAMES);
 
+  controller.setPolicy(Leap::Controller::POLICY_ALLOW_PAUSE_RESUME);
+
   // Keep this process running until Enter is pressed
-  std::cout << "Press Enter to quit..." << std::endl;
-  std::cin.get();
+  std::cout << "Press Enter to quit, or enter 'p' to pause or unpause the service..." << std::endl;
+
+  bool paused = false;
+  while (true) {
+    char c = std::cin.get();
+    if (c == 'p') {
+      paused = !paused;
+      controller.setPaused(paused);
+      std::cin.get(); //skip the newline
+    }
+    else
+      break;
+  }
 
   // Remove the sample listener when done
   controller.removeListener(listener);
