@@ -23,9 +23,9 @@ public class GestureInterpreter {
         IBk,
         MultilayerPerceptron,
         J48,
+        SMO, // SupportVectorMachine
         NaiveBayes,
         LinearRegression, // will this even work?
-        SMO, // SupportVectorMachine
     }
     private ClassificationType classficationType = ClassificationType.IBk;
     public Classifier classifier;
@@ -59,15 +59,24 @@ public class GestureInterpreter {
             case IBk:
                 classifier = new IBk();
                 break;
+            case MultilayerPerceptron:
+                classifier = new MultilayerPerceptron();
+                break;
+            case J48:
+                classifier = new J48();
+                break;
+            case SMO:
+                classifier = new SMO();
+                break;
             default:
-                classifier = new IBk();
-                System.out.println("classifier not implemented!");
+                System.out.println("ERROR: classifier not implemented!");
         }
 //        classifier.buildClassifier(trainingData); 
        classficationType = ct;
     }
     
     // TODO make sure this works
+    // TODO operate on entire current sign?
     boolean IsSignOver(FrameData frame) {
         float minMovement = 0.05f;
         boolean isMoving = false;
@@ -89,9 +98,12 @@ public class GestureInterpreter {
             double[] probDist = classifier.distributionForInstance(di);
             trainingData.classAttribute().value(classIndex);
             double choosenDist = probDist[classIndex]*100;
-            for (int i=0; i<probDist.length; i++){
-                (float)((int)(mlpDist[i]*10000))/100
-            }
+//            for (int i=0; i<probDist.length; i++){
+//                //System.out.println((float)((int)(mlpDist[i]*10000))/100+"%");
+//            }
+            // get class name
+            
+            System.out.print("prob: "+((int)(choosenDist*100))/100.0+"%");
         } catch (Exception e) {
             System.out.println(e);
             return;

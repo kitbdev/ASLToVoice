@@ -28,7 +28,7 @@ public class FrameData {
             return (float) Math.sqrt(x*x+y*y+z*z);
         }
     }
-    Vector3 zero = new Vector3();
+    public Vector3 zero = new Vector3();
 
     // Loads comma seperated values into the correct variables
     public void LoadData(String textValues) {
