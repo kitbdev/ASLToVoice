@@ -24,5 +24,9 @@ public class SignData {
         // TODO check data or something
         frames.add(frame);
     }
-    
+    public void Clear() {
+        totalDuration = 0;
+        //totalHandMovement = FrameData.Vector3();
+        frames.clear();
+    }
 }

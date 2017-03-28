@@ -13,6 +13,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /*
@@ -31,24 +33,30 @@ public class ASLtoVoiceMain {
     public static SignData curSign = new SignData();
     public static ArrayList<SignData> allSigns = new ArrayList<SignData>();
     
-    public static boolean devMode = true; // enables saving to a file for recording training data
+//    public static boolean devMode = true; // enables saving to a file for recording training data
     public static boolean running = true;
     public static long POLLRATE = 50;//ms
     public static String saveLoc = "../savedata/";
-
+    public static boolean connected;
+    
     public static void main(String[] args) {
         while (running) {
+            connected = leapSensor.ControllerConnected();
             CLI();
         }
     }
     static void CLI() {
+        System.out.println();
+        System.out.println("Leap is "+ (connected ? "" : "not ")+"connected.");
         System.out.println("Enter a command:");
         String[] com = scanner.nextLine().toLowerCase().trim().split(" ");
 //        System.out.println(">"+com.length+",");
-        if ("exit".equals(com[0])) {
+        String command = com[0];
+        if (command == "exit" || command == "e") {
             running = false;
         }
-        if ("record".equals(com[0])) {
+        if (command == "record" | command == "r") {
+            // record training data
             float recDelay = 0;
             if (com.length<2) {
                 System.out.println("need a class name to record");
@@ -61,7 +69,33 @@ public class ASLtoVoiceMain {
             }
             RecordIn(com[1], recDelay);
         }
-        if ("save".equals(com[0])) {
+        if (command == "undo" | command == "u") {
+            if (allSigns.size()<1) {
+                System.out.println("No sign to undo");
+            }
+            else {
+                allSigns.remove(allSigns.size()-1);
+                System.out.println("Removed the last sign from the list");
+            }
+        }
+        if (command == "clear" | command == "c") {
+            allSigns.clear();
+            System.out.println("Cleared all signs");
+        }
+        if (command == "test" | command == "t") {
+            try {
+                // start recording and tests that data continuously
+                RecordTest();
+            } catch (IOException ex) {
+                System.out.println(ex);
+            } catch (InterruptedException ex) {
+                System.out.println(ex);
+            }
+        }
+        if (command == "load" | command == "l") {
+            
+        }
+        if (command == "save" | command == "s") {
             String fname = "";
             if (com.length > 1) {
                 fname = com[1];
@@ -69,6 +103,7 @@ public class ASLtoVoiceMain {
             Save(fname);
         }
     }
+    // starts recordTrain in specified seconds
     static void RecordIn(String sign, float recordIn) {
         if (!leapSensor.ControllerConnected()){
             System.out.println("need controller!");
@@ -85,43 +120,42 @@ public class ASLtoVoiceMain {
             }
         }
         try {
-            try {
-                Record(sign);
-            } catch (IOException ex) {
-                System.out.println(ex);
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            RecordTrain(sign);
+        } catch (IOException | InterruptedException ex) {
+            System.out.println(ex);
         }
     }
-    static void Record(String sign) throws InterruptedException, IOException {
-        System.out.println("Recording " + sign);
-        leapSensor.StartRecording(sign);
+    // records data to curSign from leap until the sign end is detected
+    static void RecordTrain(String sign) throws InterruptedException, IOException {
+        System.out.println("Recording sign:" + sign);
+        curSign.Clear();
+        leapSensor.StartRecording();
+        System.out.println("Stop moving, remove hand, or press any key to finish");
+        while(!leapSensor.HandAvailable()) {
+            System.out.println("Hand not detected!");
+            Thread.sleep(100);
+        }
         while (true) {
             long frameStart = System.currentTimeMillis();
-            
             if (System.in.available()>0) {
                 break;
             }
             
             boolean gotFrame = leapSensor.RecordFrame();
             if (gotFrame) {
+                curSign.AddFrame(leapSensor.curFrame);
                 if (gestureInterpreter.IsSignOver(leapSensor.curFrame)) {
-                    gestureInterpreter.ClassifyGesture(curSign);
-                    //break; // TODO continuous sign detection
-                    allSigns.add(curSign);
-                } else {
-                    curSign.AddFrame(leapSensor.curFrame);
+                    break;
                 }
-                //System.out.print(framesLeft+", \n");
                 System.out.print("\n");
             } else {
-                System.out.println("Hand not detected! No data recorded.");
-                while (!leapSensor.HandAvailable()) {
-                    System.out.print(".");
-                    Thread.sleep(100);
+                System.out.println("Hand not detected!");
+                // if hand still not detected after 2 seconds, stop recording
+                Thread.sleep(2000);
+                if(!leapSensor.HandAvailable()) {
+                    System.out.println("Hand still not detected; Stopping recording.");
+                    break;
                 }
-                // TODO: if we didnt get frame this should stop ?
             }
             
             long timeTaken = System.currentTimeMillis() - frameStart;
@@ -131,12 +165,53 @@ public class ASLtoVoiceMain {
             }
             Thread.sleep(timeLeftThisFrame);// sleep for updates/sec-dt
         }
+        allSigns.add(curSign);
         System.out.println("Done recording");
     }
+    // records and tests theat sign continuously
+    static void RecordTest() throws IOException, InterruptedException {
+        System.out.println("Recording signs to test");
+        curSign.Clear();
+        leapSensor.StartRecording();
+        System.out.println("Press any key to exit");
+        while (true) {
+            long frameStart = System.currentTimeMillis();
+            if (System.in.available()>0) {
+                break;
+            }
+            
+            boolean gotFrame = leapSensor.RecordFrame();
+            if (gotFrame) {
+                curSign.AddFrame(leapSensor.curFrame);
+                if (gestureInterpreter.IsSignOver(leapSensor.curFrame)) {
+                    gestureInterpreter.ClassifyGesture(curSign);
+                    curSign.Clear();
+                }
+                System.out.print("\n");
+            } else {
+                System.out.println("Hand not detected!");
+                // wait until hand is detected
+                while(!leapSensor.HandAvailable()) {
+                    Thread.sleep(100);
+                    if (System.in.available()>0) {
+                        break;
+                    }
+                }
+            }
+            
+            long timeTaken = System.currentTimeMillis() - frameStart;
+            long timeLeftThisFrame = POLLRATE - timeTaken;
+            if (timeLeftThisFrame < 0) {
+                timeLeftThisFrame = 0;
+            }
+            Thread.sleep(timeLeftThisFrame);// sleep for updates/sec-dt
+        }
+        allSigns.add(curSign);
+        System.out.println("Done recording");
+    }
+    // save all signs to a file
     static void Save(String fname) {
-        StringBuilder sb = new StringBuilder();
-
-        //create file
+        // get the filename
         String filename = "";
         filename += saveLoc;
         if ("".equals(fname)) {
@@ -149,32 +224,27 @@ public class ASLtoVoiceMain {
             filename += fname;
         }
         filename += ".csv";
-        
-        System.out.println(filename);
+        // create the file
+        System.out.println("Saving to "+filename);
         PrintWriter openFile;
         try {
             openFile = new PrintWriter(new File(filename));
         } catch (FileNotFoundException e) {
-            System.out.println("creating file failed."+e.getMessage());
+            System.out.println("Creating file failed."+e.getMessage());
             return;
         }
         // add data to the file
+        StringBuilder sb = new StringBuilder();
         // add header line
         sb.append(curSign.frames.get(0).GetHeaderLine());
         sb.append('\n');
-        
+        // add data
         for (int i=0; i<allSigns.size(); i++) {
             sb.append(allSigns.get(i).GetAllData());
         }
-//        int numFrames = frames.length;
-//        for (int i = 0; i < numFrames; i++) {
-//            sb.append(frames[i].GetData());
-//            sb.append('\n');
-//        }
         openFile.write(sb.toString());
         openFile.close();
-//        hmm.Clear();
-        System.out.println("Saved!");
+        System.out.println("Save finished");
     }
     static void Load(String fn) {
         try {

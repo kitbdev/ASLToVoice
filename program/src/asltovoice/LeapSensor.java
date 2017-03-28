@@ -124,7 +124,7 @@ public class LeapSensor {
     }
     
     // start recording with the leap
-    public void StartRecording(String signLabel) {
+    public void StartRecording() {
         ClearFrameData();
         lastFrameID = 0;
         numFrames = 0;
@@ -135,5 +135,4 @@ public class LeapSensor {
     public void ClearFrameData() {
         curFrame.ClearData();
     }
-    
 }
