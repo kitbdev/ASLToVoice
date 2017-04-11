@@ -24,6 +24,8 @@ public class GestureInterpreter {
     public int maxNoMovementFrames = 30;
     
     int numContinuousNoMovementFrames = 0;
+    public boolean needsRebuilding = true;
+    public boolean hasData = false;
     
     // enum for classifier types
     enum ClassificationType {
@@ -40,6 +42,7 @@ public class GestureInterpreter {
     
     GestureInterpreter() {
         SetClassificationType(classficationType);
+        hasData = false;
     }
     
     void LoadData(String fileLoc) {
@@ -55,10 +58,38 @@ public class GestureInterpreter {
         if (trainingData.classIndex() == -1) {
             trainingData.setClassIndex(trainingData.numAttributes() - 1);
         }
+        // // remove id, time, cur and total frames
+        trainingData.deleteAttributeAt(3);
+        trainingData.deleteAttributeAt(2);
+        trainingData.deleteAttributeAt(1);
+        trainingData.deleteAttributeAt(0);
+        needsRebuilding = true;
+        hasData = true;
+        System.out.println("Data loaded from file. "+trainingData.numAttributes() + " attributes");
+    }
+    
+    void BuildModel() {
+        System.out.println("Building model with " + classficationType.toString() + "...");
+        try {
+            classifier.buildClassifier(trainingData);
+            if (false) {
+                Evaluation eval = new Evaluation(trainingData);
+                eval.evaluateModel(classifier, trainingData);
+                String summary = eval.toSummaryString();
+                System.out.println(summary);
+            }
+            needsRebuilding = false;
+            System.out.println("Finished building model.");
+        } catch (Exception e) {
+            System.out.println(e);
+        }
     }
     
     ClassificationType GetClassificationType() {
         return classficationType;
+    }
+    String GetClassificationTypeString() {
+        return classficationType.toString();
     }
     
     void SetClassificationType(ClassificationType ct) {
@@ -67,7 +98,12 @@ public class GestureInterpreter {
                 classifier = new IBk();
                 break;
             case MultilayerPerceptron:
-                classifier = new MultilayerPerceptron();
+                MultilayerPerceptron mp = new MultilayerPerceptron();
+                mp.setLearningRate(0);
+                mp.setMomentum(0.2);
+                mp.setTrainingTime(2000);
+                mp.setHiddenLayers("3");
+                classifier = mp;
                 break;
             case J48:
                 classifier = new J48();
@@ -78,10 +114,9 @@ public class GestureInterpreter {
             default:
                 System.out.println("ERROR: classifier not implemented!");
         }
-//        classifier.buildClassifier(trainingData); 
-       classficationType = ct;
+        classficationType = ct;
+        needsRebuilding = true;
     }
-    
     // TODO make sure this works
     // TODO operate on entire current sign?
     boolean IsSignOver(FrameData frame) {

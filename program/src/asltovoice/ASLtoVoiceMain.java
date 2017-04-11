@@ -66,12 +66,12 @@ public class ASLtoVoiceMain {
         if ("record".equals(command) || "r".equals(command)) {
             // record training data
             if (!connected) {
-                System.out.println("connect to the leap motion first!");
+                System.out.println("Connect to the leap motion first!");
                 return;
             }
             float recDelay = 0;
             if (com.length<2) {
-                System.out.println("need a class name to record");
+                System.out.println("Enter a class name to record!");
                 return;
             }
             if (com.length>2) {
@@ -99,6 +99,20 @@ public class ASLtoVoiceMain {
                 System.out.println("Connect to the leap motion first!");
                 return;
             }
+            if (!gestureInterpreter.hasData) {
+                if (allSigns.size()<1) {
+                    System.out.println("Load some data first!");
+                    return;
+                }
+                // attempt to use the data we just recorded
+                System.out.println("Saving and loading current sign data first...");
+                Load(Save(""));
+            }
+            if (gestureInterpreter.needsRebuilding) {
+                System.out.println("Building model first, retry when finished...");
+                gestureInterpreter.BuildModel();
+                return;
+            }
             try {
                 // start recording and test that data continuously
                 RecordTest();
@@ -109,7 +123,14 @@ public class ASLtoVoiceMain {
             }
         }
         if ("load".equals(command) || "l".equals(command)) {
-            
+            String fname = "";
+            if (com.length > 1) {
+                fname = com[1];
+            } else {
+                System.out.println("Enter a filename to load!");
+                return;
+            }
+            Load(fname);
         }
         if ("view".equals(command) || "v".equals(command)) {
             System.out.println(allSigns.size() + " signs recorded.");
@@ -237,10 +258,12 @@ public class ASLtoVoiceMain {
         System.out.println("Done recording");
     }
     // save all signs to a file
-    static void Save(String fname) {
+    static String Save(String fname) {
         // get the filename
         String filename = "";
-        filename += saveLoc;
+        if (!fname.contains(saveLoc)) {
+            filename += saveLoc;
+        }
         if ("".equals(fname)) {
             filename += "td_";
             LocalDateTime date = LocalDateTime.now();
@@ -258,7 +281,7 @@ public class ASLtoVoiceMain {
             openFile = new PrintWriter(new File(filename));
         } catch (FileNotFoundException e) {
             System.out.println("Creating file failed."+e.getMessage());
-            return;
+            return "";
         }
         // add data to the file
         StringBuilder sb = new StringBuilder();
@@ -272,15 +295,26 @@ public class ASLtoVoiceMain {
         openFile.write(sb.toString());
         openFile.close();
         System.out.println("Save finished");
+        return filename;
     }
-    static void Load(String fn) {
-        try {
-            Path filename = Paths.get(saveLoc, fn);
-            List<String> lines = Files.readAllLines(filename, Charset.defaultCharset());
-            FrameData[] frames;//...
-        } catch (IOException ex) {
-            System.out.println(ex);
-            return;
+    static void Load(String fname) {
+        String filename = "";
+        if (!fname.contains(saveLoc)) {
+            filename += saveLoc;
         }
+        filename+=fname;
+        if (!filename.contains(".csv")) {
+            filename += ".csv";
+        }
+        System.out.println("Loading from "+filename);
+        gestureInterpreter.LoadData(filename);
+//        try {
+//            Path filename = Paths.get(saveLoc, fn);
+//            List<String> lines = Files.readAllLines(filename, Charset.defaultCharset());
+//            FrameData[] frames;//...
+//        } catch (IOException ex) {
+//            System.out.println(ex);
+//            return;
+//        }
     }
 }

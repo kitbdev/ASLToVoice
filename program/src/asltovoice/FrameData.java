@@ -6,7 +6,7 @@ public class FrameData {
     public int id;
     public long time; // time since start of recording in ms
     public int curframe;
-    public int totalframes;// TODO: move this to sign data only
+    public int totalframes;
     public Vector3 armPos;
     public Vector3 armRot;
     public Vector3 handPos;
