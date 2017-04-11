@@ -229,8 +229,7 @@ public class ASLtoVoiceMain {
             if (gotFrame) {
                 curSign.AddFrame(leapSensor.curFrame);
                 if (gestureInterpreter.IsSignOver(leapSensor.curFrame)) {
-                    String guessSign = gestureInterpreter.ClassifyGesture(curSign);
-                    
+                    String guessSign = gestureInterpreter.ClassifyGesture(curSign.GetNormalizedData());
                     tts.speak(guessSign);
                     System.out.println("Did you sign: "+guessSign+"?");
                     curSign.Clear();
@@ -286,11 +285,11 @@ public class ASLtoVoiceMain {
         // add data to the file
         StringBuilder sb = new StringBuilder();
         // add header line
-        sb.append(curSign.GetHeaderLine());
+        sb.append(curSign.GetNormalizedHeaderLine());
         sb.append('\n');
         // add data
         for (int i=0; i<allSigns.size(); i++) {
-            sb.append(allSigns.get(i).GetAllData());
+            sb.append(allSigns.get(i).GetNormalizedDataString());
         }
         openFile.write(sb.toString());
         openFile.close();

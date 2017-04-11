@@ -12,7 +12,90 @@ public class SignData {
     public FrameData.Vector3 totalHandMovement;
     public ArrayList<FrameData> frames = new ArrayList<FrameData>();
     public String sign;
+    public int normalizedNumFrames = 16;
     
+    public String GetNormalizedDataString() {
+        // make normalized data from all datasets
+        ArrayList<double[]> allData = new ArrayList<double[]>();
+        for (int i=0; i<frames.size(); i++) {
+            allData.add(frames.get(i).GetDoubleData());
+        }
+        int dataPerFrame = allData.get(0).length - 4;// remove id, time, curframe, and totalframes
+        int framesPerFrame = normalizedNumFrames / frames.size();
+        ArrayList<double[]> normalizedData = new ArrayList<double[]>();
+        for (int i=0; i<normalizedNumFrames; i++) {
+            double[] avg = new double[dataPerFrame];
+            for (int j=4; j<4+dataPerFrame; j++) {
+                avg[j] = 0;
+                for (int k=i; k<i+framesPerFrame; k++) {
+                    avg[j] += allData.get(k)[j]; 
+                }
+                avg[j] /= framesPerFrame;
+            }
+            normalizedData.add(avg);
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        sb.append(allData.get(0)[0]+", ");// id
+        double timeTaken = allData.get(0)[1] - allData.get(allData.size()-1)[1];
+        sb.append(timeTaken+", "); // time
+        for (int i=0; i<normalizedNumFrames; i++) {
+            AddDataArray(sb, normalizedData.get(i));
+        }
+        sb.append(sign);
+        return sb.toString();
+    }
+    void AddDataArray(StringBuilder sb, double[] data) {
+        for (int i=0;i<data.length;i++) {
+            sb.append(data[i]);
+            sb.append(",");
+        }
+    }
+    public double[] GetNormalizedData() {
+        ArrayList<double[]> allData = new ArrayList<double[]>();
+        for (int i=0; i<frames.size(); i++) {
+            allData.add(frames.get(i).GetDoubleData());
+        }
+        int dataPerFrame = allData.get(0).length - 4;// remove id, time, curframe, and totalframes
+        int framesPerFrame = normalizedNumFrames / frames.size();
+        ArrayList<double[]> normalizedData = new ArrayList<double[]>();
+        for (int i=0; i<normalizedNumFrames; i++) {
+            double[] avg = new double[dataPerFrame];
+            for (int j=4; j<4+dataPerFrame; j++) {
+                avg[j] = 0;
+                for (int k=i; k<i+framesPerFrame; k++) {
+                    avg[j] += allData.get(k)[j]; 
+                }
+                avg[j] /= framesPerFrame;
+            }
+            normalizedData.add(avg);
+        }
+        double[] data = new double[normalizedNumFrames*dataPerFrame+1];
+        double timeTaken = allData.get(0)[1] - allData.get(allData.size()-1)[1];
+        data[0] = timeTaken;
+        for (int i=0; i<normalizedNumFrames; i++) {
+            System.arraycopy(normalizedData.get(0), 0, data, i*dataPerFrame+1, normalizedData.size());
+        }
+        return data;
+    }
+    
+    public String GetNormalizedHeaderLine() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("id,");
+        sb.append("time,");// amount of time this sign took
+        for (int i=0; i<normalizedNumFrames; i++) {
+            AddPosRot(sb, "arm_"+i);
+            AddPosRotVel(sb, "hand_"+i);
+            AddPosRotVel(sb, "finger1_"+i);
+            AddPosRotVel(sb, "finger2_"+i);
+            AddPosRotVel(sb, "finger3_"+i);
+            AddPosRotVel(sb, "finger4_"+i);
+            AddPosRotVel(sb, "finger5_"+i);
+        }
+        sb.append("sign");
+        return "";
+    }
+    // 16 * (3*6+2*1)+3 = 323
     public String GetAllData() {
         StringBuilder sb = new StringBuilder();
         for (int i=0; i<frames.size(); i++) {

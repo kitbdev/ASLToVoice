@@ -54,18 +54,18 @@ public class GestureInterpreter {
             System.out.println(e);
             return;
         }
+        if (trainingData.numAttributes() != 323) {
+            System.out.println("Unrecognized number of attributes: " + trainingData.numAttributes());
+        }
         // set class index because this is not an ARFF
         if (trainingData.classIndex() == -1) {
             trainingData.setClassIndex(trainingData.numAttributes() - 1);
         }
-        // // remove id, time, cur and total frames
-        trainingData.deleteAttributeAt(3);
-        trainingData.deleteAttributeAt(2);
-        trainingData.deleteAttributeAt(1);
+        // remove id attribute
         trainingData.deleteAttributeAt(0);
         needsRebuilding = true;
         hasData = true;
-        System.out.println("Data loaded from file. "+trainingData.numAttributes() + " attributes");
+        System.out.println("Data loaded from file. ");
     }
     
     void BuildModel() {
@@ -142,20 +142,28 @@ public class GestureInterpreter {
         return numContinuousNoMovementFrames >= maxNoMovementFrames;
     }
     
-    String ClassifyGesture(SignData gesture) {
-        DenseInstance di = new DenseInstance(trainingData.numAttributes());
+    String ClassifyGesture(double[] newData) {
+        if (!hasData) {
+            System.out.println("load data");
+            return "ERROR: load data";
+        }
+        
         try {
-            int classIndex = (int) classifier.classifyInstance(di);
-            double[] probDist = classifier.distributionForInstance(di);
-            trainingData.classAttribute().value(classIndex);
-            double choosenDist = probDist[classIndex]*100;
-//            for (int i=0; i<probDist.length; i++){
-//                //System.out.println((float)((int)(mlpDist[i]*10000))/100+"%");
-//            }
-            // get class name
+            DenseInstance di = new DenseInstance(trainingData.numAttributes());
             
-            System.out.print("prob: "+((int)(choosenDist*100))/100.0+"%");
-            return "ERROR: not implemented";
+            for (int i = 0; i < trainingData.numAttributes(); i++) {
+                di.setValue(i, newData[i]);
+            }
+            di.setDataset(trainingData);
+            
+            int chooseni = (int) classifier.classifyInstance(di);
+            String choosen = trainingData.classAttribute().value(chooseni);
+            double[] choosenDistribution = classifier.distributionForInstance(di);
+            double choosenprob = choosenDistribution[chooseni]*100;
+            System.out.print("choosen sign: "+choosen);
+            System.out.print("probability: "+((int)(choosenprob*100))/100.0+"%");
+            
+            return choosen;
         } catch (Exception e) {
             System.out.println(e);
         }
