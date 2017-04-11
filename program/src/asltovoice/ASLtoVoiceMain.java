@@ -187,9 +187,15 @@ public class ASLtoVoiceMain {
             }
             
             boolean gotFrame = leapSensor.RecordFrame();
+            
             if (gotFrame) {
                 curSign.AddFrame(leapSensor.curFrame);
+//                System.out.println("printing values");
+//                leapSensor.curFrame.PrintAll();
+//                System.out.println("printing curframe");
+//                curSign.frames.get(curSign.frames.size()-1).PrintAll();
                 if (gestureInterpreter.IsSignOver(leapSensor.curFrame)) {
+                    curSign.RemoveLast(gestureInterpreter.maxNoMovementFrames);
                     break;
                 }
                 //System.out.print("\n");
@@ -211,6 +217,10 @@ public class ASLtoVoiceMain {
             Thread.sleep(timeLeftThisFrame);// sleep for updates/sec-dt
         }
         allSigns.add(curSign);
+//        System.out.println("last sign frame");
+//        int lastSign = allSigns.size() -1;
+//        int lastSignLastFrame = allSigns.get(lastSign).frames.size()-1;
+//        System.out.println(allSigns.get(lastSign).frames.get(lastSignLastFrame).handRot.x);
         System.out.println("Done recording");
     }
     // records and tests for signs continuously
@@ -288,8 +298,10 @@ public class ASLtoVoiceMain {
         sb.append(curSign.GetNormalizedHeaderLine());
         sb.append('\n');
         // add data
+        curSign.frames.get(curSign.frames.size()-1).PrintAll();
         for (int i=0; i<allSigns.size(); i++) {
             sb.append(allSigns.get(i).GetNormalizedDataString());
+            sb.append("\n");
         }
         openFile.write(sb.toString());
         openFile.close();

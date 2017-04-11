@@ -146,7 +146,10 @@ public class FrameData {
     }
     // Saves variables into a double array
     public double[] GetDoubleData() {
+//        System.out.println("printing values");
+//        PrintAll();
         double[] data = new double[64];
+        // 19 + 5*9
         int n = 0;
         data[n++] = (id);
         data[n++] = (time);
@@ -179,7 +182,73 @@ public class FrameData {
             data[n++] = (fingerVel[i].y);
             data[n++] = (fingerVel[i].z);
         }
+//        System.out.print(n);
+//        for (int i=0; i<64; i++) {
+//            System.out.print(data[i]);
+//        }
+//        System.out.println();
         return data;
+    }
+    public void PrintAll() {
+        System.out.print(id);
+        System.out.print(",");
+        System.out.print(time);
+        System.out.print(",");
+        System.out.print(curframe);
+        System.out.print(",");
+        System.out.print(totalframes);
+        System.out.print(",");
+        System.out.print(armPos.x);
+        System.out.print(",");
+        System.out.print(armPos.y);
+        System.out.print(",");
+        System.out.print(armPos.z);
+        System.out.print(",");
+        System.out.print(armRot.x);
+        System.out.print(",");
+        System.out.print(armRot.y);
+        System.out.print(",");
+        System.out.print(armRot.z);
+        System.out.print(",");
+        System.out.print(handPos.x);
+        System.out.print(",");
+        System.out.print(handPos.y);
+        System.out.print(",");
+        System.out.print(handPos.z);
+        System.out.print(",");
+        System.out.print(handRot.x);
+        System.out.print(",");
+        System.out.print(handRot.y);
+        System.out.print(",");
+        System.out.print(handRot.z);
+        System.out.print(",");
+        System.out.print(handVel.x);
+        System.out.print(",");
+        System.out.print(handVel.y);
+        System.out.print(",");
+        System.out.print(handVel.z);
+        System.out.print(",");
+        for (int i=0;i<5;i++)
+        {
+            System.out.print(fingerPos[i].x);
+        System.out.print(",");
+            System.out.print(fingerPos[i].y);
+        System.out.print(",");
+            System.out.print(fingerPos[i].z);
+        System.out.print(",");
+            System.out.print(fingerRot[i].x);
+        System.out.print(",");
+            System.out.print(fingerRot[i].y);
+        System.out.print(",");
+            System.out.print(fingerRot[i].z);
+        System.out.print(",");
+            System.out.print(fingerVel[i].x);
+        System.out.print(",");
+            System.out.print(fingerVel[i].y);
+        System.out.print(",");
+            System.out.print(fingerVel[i].z);
+        System.out.print(",");
+        }
     }
     public void ClearData() {
         time = 0;

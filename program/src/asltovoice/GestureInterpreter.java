@@ -19,7 +19,7 @@ import weka.classifiers.functions.SMO;
 public class GestureInterpreter {
     
     // sensitivity to end gesture
-    public float minMovementAmount = 75f;
+    public float minMovementAmount = 125f;
     // time required to end gesture
     public int maxNoMovementFrames = 30;
     
@@ -133,7 +133,7 @@ public class GestureInterpreter {
             }
         }
         //TODO: test total movement instead of individual movement?
-//        System.out.println(totalMovement);
+        System.out.println(totalMovement);
         if (isMoving) {
             numContinuousNoMovementFrames = 0;
         } else {

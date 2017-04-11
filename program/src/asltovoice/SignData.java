@@ -21,14 +21,16 @@ public class SignData {
             allData.add(frames.get(i).GetDoubleData());
         }
         int dataPerFrame = allData.get(0).length - 4;// remove id, time, curframe, and totalframes
-        int framesPerFrame = normalizedNumFrames / frames.size();
+        double framesPerFrame = (double)frames.size() / normalizedNumFrames;
+        int framesPerFramei = (int)(framesPerFrame);
         ArrayList<double[]> normalizedData = new ArrayList<double[]>();
         for (int i=0; i<normalizedNumFrames; i++) {
             double[] avg = new double[dataPerFrame];
-            for (int j=4; j<4+dataPerFrame; j++) {
+            for (int j=0; j<dataPerFrame; j++) {
                 avg[j] = 0;
-                for (int k=i; k<i+framesPerFrame; k++) {
-                    avg[j] += allData.get(k)[j]; 
+                for (int k=i; k<i+(int)framesPerFramei; k++) {
+                    avg[j] += allData.get(k)[j+4]; 
+                    System.out.print(allData.get(k)[j+4]+",");
                 }
                 avg[j] /= framesPerFrame;
             }
@@ -93,7 +95,7 @@ public class SignData {
             AddPosRotVel(sb, "finger5_"+i);
         }
         sb.append("sign");
-        return "";
+        return sb.toString();
     }
     // 16 * (3*6+2*1)+3 = 323
     public String GetAllData() {
@@ -108,8 +110,12 @@ public class SignData {
     }
     
     public void AddFrame(FrameData frame) {
-        // TODO check data or something
         frames.add(frame);
+    }
+    public void RemoveLast(int amount) {
+        for (int i=0;i<amount;i++) {
+            frames.remove(frames.size());
+        }
     }
     public void Clear() {
         totalDuration = 0;
