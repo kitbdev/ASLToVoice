@@ -1,103 +1,97 @@
 package asltovoice;
 
 import com.leapmotion.leap.*;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.ArrayList;
 
+// Collects data from the leap Sensor
 public class LeapSensor {
+    
+    public static Controller controller = new Controller();
     
     public long lastFrameID = 0;
     boolean recording = false;
-    List<Float> records = new ArrayList<>();
+    public FrameData curFrame = new FrameData();
     long recordStartTimeN = 0;
-    List<Long> timeRecords = new ArrayList<>();
     int numFrames = 0;
-    String sign = "";
-    String savePath = "";
-    PrintWriter openFile;
-    boolean isFileOpen = false;
-    private int rid, totalId=0;
-
-    public boolean ProcessFrame(Frame frame) {
-        if (recording) {
-            if (lastFrameID != frame.id()) {
-                HandList hands = frame.hands();
-                if (hands.count() > 0) {
-                    // add time since start frame
-                    long dNano = System.nanoTime() - recordStartTimeN;
-                    timeRecords.add(dNano);
-                    // add right hand then left hand to records, 0s if not available
-                    Hand hand = hands.get(0);
-                    if (hand.isRight()) {
-                        // this is the right hand
-                        RecordHand(hand);
-                        if(hands.count() > 1) {
-                            Hand lhand = hands.get(1);
-                            RecordHand(lhand);
-                        } else {
-                            RecordHand(null);
-                        }
+    
+    // records a frame, returns false if failed
+    public boolean RecordFrame() {
+        Frame frame = controller.frame();
+        if (lastFrameID != frame.id()) {
+            HandList hands = frame.hands();
+            if (hands.count() > 0) {
+                ClearFrameData();
+                // add time since start frame
+                long curTime = System.nanoTime() - recordStartTimeN;
+                curFrame.time = (int)curTime;
+                // add right hand then left hand to records, 0s if not available
+                Hand hand = hands.get(0);
+                if (hand.isRight()) {
+                    // this is the right hand
+                    RecordHand(hand);
+                    if(hands.count() > 1) {
+                        Hand lhand = hands.get(1);
+                        RecordHand(lhand);
                     } else {
-                        // this is the left hand
-                        if(hands.count() > 1) {
-                            Hand rhand = hands.get(1);
-                            RecordHand(rhand);
-                        } else {
-                            RecordHand(null);
-                        }
-                        RecordHand(hand);
+                        RecordHand(null);
                     }
-                    numFrames++;
+                } else {
+                    // this is the left hand
+                    if(hands.count() > 1) {
+                        Hand rhand = hands.get(1);
+                        RecordHand(rhand);
+                    } else {
+                        RecordHand(null);
+                    }
+                    RecordHand(hand);
                 }
+                numFrames++;
+            } else {
+                // no hands!
+                return false;
             }
+        } else {
+            // polling too fast!
+            return false;
         }
         lastFrameID = frame.id();
-        //System.out.println("f"+numFrames);
-        return numFrames != 0;
+        return true;
     }
+    
     void RecordHand(Hand hand) {
         if (hand==null) {
-            // there are 60 records added per hand
-            for (int i=0; i<60; i++) {
-                records.add(0f);
-            }
             return;
         }
         // currently arm, hand, and finger pos rot and vel
+        // TODO: left vs right hands
         Arm arm = hand.arm();
         if (!arm.isValid()) {
-            for (int i=0; i<6; i++) {
-                records.add(0f);
-            }
+            // for (int i=0; i<6; i++) {
+            //     curFrame. = 0f;
+            // }
         } else {
             Vector armPos = arm.elbowPosition();
-            records.add(armPos.getX());
-            records.add(armPos.getY());
-            records.add(armPos.getZ());
+            curFrame.armPos.x = armPos.getX();
+            curFrame.armPos.y = armPos.getY();
+            curFrame.armPos.z = armPos.getZ();
             Vector armDir = arm.direction();
-            records.add(armDir.getX());
-            records.add(armDir.getY());
-            records.add(armDir.getZ());
+            curFrame.armRot.x = armDir.getX();
+            curFrame.armRot.y = armDir.getY();
+            curFrame.armRot.z = armDir.getZ();
             // no arm velocity
         }
         // hand
         Vector handPos = hand.palmPosition();
-        records.add(handPos.getX());
-        records.add(handPos.getY());
-        records.add(handPos.getZ());
+        curFrame.handPos.x = handPos.getX();
+        curFrame.handPos.y = handPos.getY();
+        curFrame.handPos.z = handPos.getZ();
         Vector handDir = hand.direction();
-        records.add(handDir.getX());
-        records.add(handDir.getY());
-        records.add(handDir.getZ());
+        curFrame.handRot.x = handDir.getX();
+        curFrame.handRot.y = handDir.getY();
+        curFrame.handRot.z = handDir.getZ();
         Vector handVel = hand.palmVelocity();
-        records.add(handVel.getX());
-        records.add(handVel.getY());
-        records.add(handVel.getZ());
+        curFrame.handVel.x = handVel.getX();
+        curFrame.handVel.y = handVel.getY();
+        curFrame.handVel.z = handVel.getZ();
 
         // fingers
         FingerList fingers = hand.fingers();
@@ -105,178 +99,39 @@ public class LeapSensor {
             Finger f = fingers.get(i);
             // finger pos relative to hand
             Vector fPos = f.tipPosition().minus(handPos);
-            records.add(fPos.getX());
-            records.add(fPos.getY());
-            records.add(fPos.getZ());
+            curFrame.fingerPos[i].x = 1;//fPos.getX();
+            curFrame.fingerPos[i].y = fPos.getY();
+            curFrame.fingerPos[i].z = fPos.getZ();
             Vector fDir = f.direction();
-            records.add(fDir.getX());
-            records.add(fDir.getY());
-            records.add(fDir.getZ());
+            curFrame.fingerRot[i].x = fDir.getX();
+            curFrame.fingerRot[i].y = fDir.getY();
+            curFrame.fingerRot[i].z = fDir.getZ();
             Vector fVel = f.tipVelocity();
-            records.add(fVel.getX());
-            records.add(fVel.getY());
-            records.add(fVel.getZ());
+            curFrame.fingerVel[i].x = fVel.getX();
+            curFrame.fingerVel[i].y = fVel.getY();
+            curFrame.fingerVel[i].z = fVel.getZ();
         }
     }
-    
-    public boolean HandAvailable(Frame frame) {
-        Hand hand = frame.hands().frontmost();
+    public boolean HandAvailable() {
+        Hand hand = controller.frame().hands().frontmost();
         return hand.isValid();
+    }
+
+    public boolean ControllerConnected() {
+        return controller.isConnected();
     }
     
     // start recording with the leap
-    public void StartRecording(String signLabel) {
-        recording = true;
+    public void StartRecording() {
+        ClearFrameData();
         lastFrameID = 0;
-        ClearRecording();
-        if (signLabel == "") {
-            // TODO: use the last sign 
-        } else {
-            sign = signLabel;
-        }
-        rid += 1;
-        recordStartTimeN = System.nanoTime();
-    }
-
-    // stop recording
-    public void StopRecording() {
-        recording = false;
-        System.out.println(numFrames + " frames recorded.");
+        numFrames = 0;
+        recordStartTimeN = System.nanoTime(); // current time millis ?
     }
 
     // clear the data we recorded
-    public void ClearRecording() {
-        records.clear();
-        timeRecords.clear();
-        numFrames = 0;
-        sign = "";
-        rid -= 1;
-    }
-
-    public boolean HasData() {
-        return !records.isEmpty();
-    }
-    
-    public void StartDataFile(boolean isTrainingData, String saveLoc) throws FileNotFoundException {
-        StartDataFile(isTrainingData, saveLoc, "_");
-    }
-    
-    public void StartDataFile(boolean isTrainingData, String saveLoc, String filename) throws FileNotFoundException {
-        String fname = "";
-        if (filename=="_") {
-            LocalDateTime date = LocalDateTime.now();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("kkmmss_ddMMyy");//hourminutesecond_daymonthyear
-            String text = date.format(formatter);
-            fname = saveLoc;
-            if (isTrainingData) {
-                fname += "td_";
-            }
-            // TODO: add types of classes to path?
-            fname += text + ".csv";
-        }
-        else {
-            fname = filename;
-        }
-        savePath = fname;
-        rid = 0;
-        totalId = 0;
-        System.out.println("New file is: ");
-        System.out.println(fname);
-        openFile = new PrintWriter(new File(fname));
-        isFileOpen = true;
-        AddHeaderLine();
-    }
-
-    public void FinishDataFile() {
-        openFile.close();
-        isFileOpen = false;
-        totalId = 0;
-        System.out.println("Finished file "+savePath);
-    }
-
-    // save all recorded data
-    public void SaveRecording() {
-        if (!isFileOpen) {
-            System.out.println("File not open!");
-            return;
-        }
-        StringBuilder sb = new StringBuilder();
-        // append the data
-        if (numFrames == 0) {
-            System.out.println("no data to save!");
-            return;
-        }
-        int dataPerFrame = records.size() / numFrames;
-        for (int i = 0; i < numFrames; i++) {
-            sb.append(totalId++);// id //rid * numFrames + i + numFrames
-            sb.append(',');
-            sb.append(timeRecords.get(i));// time since start of recording
-            sb.append(',');
-            sb.append(i);// current frame
-            sb.append(',');
-            sb.append(numFrames);// total frames of this sign
-            sb.append(',');
-            for (int j = 0; j < dataPerFrame; j++) {
-                sb.append(records.get(i * dataPerFrame + j).toString());
-                sb.append(',');
-            }
-            if (sign != "") {
-                sb.append(sign);
-            }
-            sb.append('\n');
-        }
-        openFile.write(sb.toString());
-        System.out.println("Saved " + sign);
-        ClearRecording();
-    }
-    public float LoadDataAt(int recordsIndex){
-        //TODO: average out data first?
-        return records.get(recordsIndex);
-    }
-    
-    void AddHeaderLine() {
-        StringBuilder sb = new StringBuilder();
-        // add header line of all features to file
-        sb.append("id,");
-        //TODO: see weka api for what else to include
-        sb.append("time,");
-        sb.append("cur_frame,");
-        // TODO: relative time? time since last frame
-        sb.append("total_frames,");
-        AddPosRot(sb, "rarm");
-        AddPosRotVel(sb, "rhand");
-        for (int i = 1; i <= 5; i++) {
-            AddPosRotVel(sb, "rfinger" + i);
-        }
-        AddPosRot(sb, "larm");
-        AddPosRotVel(sb, "lhand");
-        for (int i = 1; i <= 5; i++) {
-            AddPosRotVel(sb, "lfinger" + i);
-        }
-        sb.append('\n');
-        openFile.write(sb.toString());
-    }
-    void AddPosRot(StringBuilder sb, String name) {
-        sb.append(name);
-        sb.append("_pos_x,");
-        sb.append(name);
-        sb.append("_pos_y,");
-        sb.append(name);
-        sb.append("_pos_z,");
-        sb.append(name);
-        sb.append("_yaw,");
-        sb.append(name);
-        sb.append("_roll,");
-        sb.append(name);
-        sb.append("_pitch,");
-    }
-    void AddPosRotVel(StringBuilder sb, String name) {
-        AddPosRot(sb, name);
-        sb.append(name);
-        sb.append("_vel_x,");
-        sb.append(name);
-        sb.append("_vel_y,");
-        sb.append(name);
-        sb.append("_vel_z,");
+    public void ClearFrameData() {
+        curFrame.ClearData();
+        curFrame.fingerPos[0].x = -1;
     }
 }
