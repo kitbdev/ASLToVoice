@@ -18,8 +18,12 @@ import weka.classifiers.functions.SMO;
 // identifies when a gestures is finished
 public class GestureInterpreter {
     
-    public int maxNoMovementFrames = 40;
-    public int numContinuousNoMovementFrames = 0;
+    // sensitivity to end gesture
+    public float minMovementAmount = 75f;
+    // time required to end gesture
+    public int maxNoMovementFrames = 30;
+    
+    int numContinuousNoMovementFrames = 0;
     
     // enum for classifier types
     enum ClassificationType {
@@ -81,21 +85,20 @@ public class GestureInterpreter {
     // TODO make sure this works
     // TODO operate on entire current sign?
     boolean IsSignOver(FrameData frame) {
-        float minMovement = 50f;
         float totalMovement = 0.0f;
         boolean isMoving = false;
         totalMovement+=frame.handVel.magnitude();
-        if (frame.handVel.magnitude() > minMovement) {
+        if (frame.handVel.magnitude() > minMovementAmount) {
             isMoving = true;
         }
         for (int i=0; i<5; i++) {
             totalMovement+=frame.fingerVel[i].magnitude();
-            if (frame.fingerVel[i].magnitude() > minMovement) {
+            if (frame.fingerVel[i].magnitude() > minMovementAmount) {
                 isMoving = true;
             }
         }
-        System.out.println(totalMovement);
-//        return !isMoving;
+        //TODO: test total movement instead of individual movement?
+//        System.out.println(totalMovement);
         if (isMoving) {
             numContinuousNoMovementFrames = 0;
         } else {
@@ -104,7 +107,7 @@ public class GestureInterpreter {
         return numContinuousNoMovementFrames >= maxNoMovementFrames;
     }
     
-    void ClassifyGesture(SignData gesture) {
+    String ClassifyGesture(SignData gesture) {
         DenseInstance di = new DenseInstance(trainingData.numAttributes());
         try {
             int classIndex = (int) classifier.classifyInstance(di);
@@ -117,9 +120,10 @@ public class GestureInterpreter {
             // get class name
             
             System.out.print("prob: "+((int)(choosenDist*100))/100.0+"%");
+            return "ERROR: not implemented";
         } catch (Exception e) {
             System.out.println(e);
-            return;
-        }        
+        }
+        return "ERROR: classification failed";
     }
 }

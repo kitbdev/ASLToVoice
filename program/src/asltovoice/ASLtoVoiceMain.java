@@ -39,18 +39,21 @@ public class ASLtoVoiceMain {
     public static boolean connected;
     
     public static void main(String[] args) {
-		tts.allo();
+        tts.allocate();
+        tts.mute = true;
         //ml.tts = tts;
-		while (running) {
+        while (running) {
             connected = leapSensor.ControllerConnected();
             CLI();
-		}
+        }
         System.out.println("Exiting...");
-        tts.deallo();
+        tts.deallocate();
     }
     static void CLI() {
-        System.out.println();
+        System.out.println("...");
         System.out.println("Leap is "+ (connected ? "" : "not ")+"connected.");
+        System.out.println("exit, record (training data), undo (remove last sign), \n"
+                + "clear(remove all signs), test, load, view (recorded signs), or save(recorded data)");
         System.out.println("Enter a command:");
         String[] com = scanner.nextLine().toLowerCase().trim().split(" ");
 //        System.out.println(">"+com.length+",");
@@ -62,7 +65,6 @@ public class ASLtoVoiceMain {
         }
         if ("record".equals(command) || "r".equals(command)) {
             // record training data
-            System.out.println("record command entered");
             if (!connected) {
                 System.out.println("connect to the leap motion first!");
                 return;
@@ -93,8 +95,12 @@ public class ASLtoVoiceMain {
             System.out.println("Cleared all signs");
         }
         if ("test".equals(command) || "t".equals(command)) {
+            if (!connected) {
+                System.out.println("Connect to the leap motion first!");
+                return;
+            }
             try {
-                // start recording and tests that data continuously
+                // start recording and test that data continuously
                 RecordTest();
             } catch (IOException ex) {
                 System.out.println(ex);
@@ -104,6 +110,13 @@ public class ASLtoVoiceMain {
         }
         if ("load".equals(command) || "l".equals(command)) {
             
+        }
+        if ("view".equals(command) || "v".equals(command)) {
+            System.out.println(allSigns.size() + " signs recorded.");
+            for (int i=0;i<allSigns.size();i++) {
+                System.out.print(allSigns.get(i).sign+", ");
+            }
+            System.out.println();
         }
         if ("save".equals(command) || "s".equals(command)) {
             String fname = "";
@@ -139,6 +152,7 @@ public class ASLtoVoiceMain {
     static void RecordTrain(String sign) throws InterruptedException, IOException {
         System.out.println("Recording sign:" + sign);
         curSign.Clear();
+        curSign.sign = sign;
         leapSensor.StartRecording();
         System.out.println("Stop moving, remove hand, or press any key to finish");
         while(!leapSensor.HandAvailable()) {
@@ -178,7 +192,7 @@ public class ASLtoVoiceMain {
         allSigns.add(curSign);
         System.out.println("Done recording");
     }
-    // records and tests theat sign continuously
+    // records and tests for signs continuously
     static void RecordTest() throws IOException, InterruptedException {
         System.out.println("Recording signs to test");
         curSign.Clear();
@@ -194,7 +208,10 @@ public class ASLtoVoiceMain {
             if (gotFrame) {
                 curSign.AddFrame(leapSensor.curFrame);
                 if (gestureInterpreter.IsSignOver(leapSensor.curFrame)) {
-                    gestureInterpreter.ClassifyGesture(curSign);
+                    String guessSign = gestureInterpreter.ClassifyGesture(curSign);
+                    
+                    tts.speak(guessSign);
+                    System.out.println("Did you sign: "+guessSign+"?");
                     curSign.Clear();
                 }
                 System.out.print("\n");
@@ -246,7 +263,7 @@ public class ASLtoVoiceMain {
         // add data to the file
         StringBuilder sb = new StringBuilder();
         // add header line
-        sb.append(curSign.frames.get(0).GetHeaderLine());
+        sb.append(curSign.GetHeaderLine());
         sb.append('\n');
         // add data
         for (int i=0; i<allSigns.size(); i++) {

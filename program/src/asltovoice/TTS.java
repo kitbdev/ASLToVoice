@@ -11,7 +11,7 @@ public class TTS {
     
     public boolean mute = false;
     
-    public void allo()
+    public void allocate()
     {
         if (voice == null) {
             System.err.println(
@@ -20,7 +20,7 @@ public class TTS {
         }
         voice.allocate();
     }
-    public void deallo()
+    public void deallocate()
     {
         voice.deallocate();
     }

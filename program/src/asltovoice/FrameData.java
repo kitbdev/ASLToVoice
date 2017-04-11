@@ -15,7 +15,6 @@ public class FrameData {
     public Vector3[] fingerPos = new Vector3[5];
     public Vector3[] fingerRot = new Vector3[5];
     public Vector3[] fingerVel = new Vector3[5];
-    public String sign;
     
     public class Vector3 {
         float x;
@@ -78,7 +77,7 @@ public class FrameData {
             fingerVel[i].y = Float.parseFloat(dataValues[26+i*9]);
             fingerVel[i].z = Float.parseFloat(dataValues[27+i*9]);
         }
-        sign = dataValues[dataValues.length-1];
+//        sign = dataValues[dataValues.length-1];
     }
     // Saves variables into a comma seperated string of values
     public String GetData() {
@@ -142,7 +141,7 @@ public class FrameData {
             sb.append(fingerVel[i].z);
             sb.append(',');
         }
-        sb.append(sign);
+//        sb.append(sign);
         return sb.toString();
     }
     // Saves variables into a double array
@@ -182,37 +181,6 @@ public class FrameData {
         }
         return data;
     }
-    public String GetHeaderLine() {
-        String header = "";
-        header += "id,";
-        // other things
-        header += "sign";
-        return "";
-    }
-    void AddPosRot(StringBuilder sb, String name) {
-        sb.append(name);
-        sb.append("_pos_x,");
-        sb.append(name);
-        sb.append("_pos_y,");
-        sb.append(name);
-        sb.append("_pos_z,");
-        sb.append(name);
-        sb.append("_yaw,");
-        sb.append(name);
-        sb.append("_roll,");
-        sb.append(name);
-        sb.append("_pitch,");
-    }
-
-    void AddPosRotVel(StringBuilder sb, String name) {
-        AddPosRot(sb, name);
-        sb.append(name);
-        sb.append("_vel_x,");
-        sb.append(name);
-        sb.append("_vel_y,");
-        sb.append(name);
-        sb.append("_vel_z,");
-    }
     public void ClearData() {
         time = 0;
         armPos = zero;
@@ -228,6 +196,5 @@ public class FrameData {
             fingerRot[i] = zero;
             fingerVel[i] = zero;
          }
-        sign = "";
     }
 }
