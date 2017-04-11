@@ -10,7 +10,7 @@ public class SignData {
     
     public int totalDuration; // in ms
     public FrameData.Vector3 totalHandMovement;
-    public ArrayList<FrameData> frames;
+    public ArrayList<FrameData> frames = new ArrayList<FrameData>();
     
     public String GetAllData() {
         StringBuilder sb = new StringBuilder();

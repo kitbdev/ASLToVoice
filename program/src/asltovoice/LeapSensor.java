@@ -10,7 +10,7 @@ public class LeapSensor {
     
     public long lastFrameID = 0;
     boolean recording = false;
-    public FrameData curFrame;
+    public FrameData curFrame = new FrameData();
     long recordStartTimeN = 0;
     int numFrames = 0;
     
@@ -100,7 +100,7 @@ public class LeapSensor {
             Finger f = fingers.get(i);
             // finger pos relative to hand
             Vector fPos = f.tipPosition().minus(handPos);
-            curFrame.fingerPos[i].x = fPos.getX();
+            curFrame.fingerPos[i].x = 1;//fPos.getX();
             curFrame.fingerPos[i].y = fPos.getY();
             curFrame.fingerPos[i].z = fPos.getZ();
             Vector fDir = f.direction();
@@ -134,5 +134,6 @@ public class LeapSensor {
     // clear the data we recorded
     public void ClearFrameData() {
         curFrame.ClearData();
+        curFrame.fingerPos[0].x = -1;
     }
 }

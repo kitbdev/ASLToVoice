@@ -13,8 +13,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 
 /*
@@ -51,12 +49,19 @@ public class ASLtoVoiceMain {
         System.out.println("Enter a command:");
         String[] com = scanner.nextLine().toLowerCase().trim().split(" ");
 //        System.out.println(">"+com.length+",");
-        String command = com[0];
-        if (command == "exit" || command == "e") {
+        String command = com[0].trim();
+//        System.out.println("\""+command+"\" entered");
+        if ("exit".equals(command) || "e".equals(command)) {
             running = false;
+            return;
         }
-        if (command == "record" | command == "r") {
+        if ("record".equals(command) || "r".equals(command)) {
             // record training data
+            System.out.println("record command entered");
+            if (!connected) {
+                System.out.println("connect to the leap motion first!");
+                return;
+            }
             float recDelay = 0;
             if (com.length<2) {
                 System.out.println("need a class name to record");
@@ -69,7 +74,7 @@ public class ASLtoVoiceMain {
             }
             RecordIn(com[1], recDelay);
         }
-        if (command == "undo" | command == "u") {
+        if ("undo".equals(command) || "u".equals(command)) {
             if (allSigns.size()<1) {
                 System.out.println("No sign to undo");
             }
@@ -78,11 +83,11 @@ public class ASLtoVoiceMain {
                 System.out.println("Removed the last sign from the list");
             }
         }
-        if (command == "clear" | command == "c") {
+        if ("clear".equals(command) || "c".equals(command)) {
             allSigns.clear();
             System.out.println("Cleared all signs");
         }
-        if (command == "test" | command == "t") {
+        if ("test".equals(command) || "t".equals(command)) {
             try {
                 // start recording and tests that data continuously
                 RecordTest();
@@ -92,10 +97,10 @@ public class ASLtoVoiceMain {
                 System.out.println(ex);
             }
         }
-        if (command == "load" | command == "l") {
+        if ("load".equals(command) || "l".equals(command)) {
             
         }
-        if (command == "save" | command == "s") {
+        if ("save".equals(command) || "s".equals(command)) {
             String fname = "";
             if (com.length > 1) {
                 fname = com[1];
@@ -147,7 +152,7 @@ public class ASLtoVoiceMain {
                 if (gestureInterpreter.IsSignOver(leapSensor.curFrame)) {
                     break;
                 }
-                System.out.print("\n");
+                //System.out.print("\n");
             } else {
                 System.out.println("Hand not detected!");
                 // if hand still not detected after 2 seconds, stop recording

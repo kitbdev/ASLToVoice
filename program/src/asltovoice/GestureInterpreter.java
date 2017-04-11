@@ -18,6 +18,9 @@ import weka.classifiers.functions.SMO;
 // identifies when a gestures is finished
 public class GestureInterpreter {
     
+    public int maxNoMovementFrames = 40;
+    public int numContinuousNoMovementFrames = 0;
+    
     // enum for classifier types
     enum ClassificationType {
         IBk,
@@ -78,17 +81,27 @@ public class GestureInterpreter {
     // TODO make sure this works
     // TODO operate on entire current sign?
     boolean IsSignOver(FrameData frame) {
-        float minMovement = 0.05f;
+        float minMovement = 50f;
+        float totalMovement = 0.0f;
         boolean isMoving = false;
+        totalMovement+=frame.handVel.magnitude();
         if (frame.handVel.magnitude() > minMovement) {
             isMoving = true;
         }
         for (int i=0; i<5; i++) {
+            totalMovement+=frame.fingerVel[i].magnitude();
             if (frame.fingerVel[i].magnitude() > minMovement) {
                 isMoving = true;
             }
         }
-        return !isMoving;
+        System.out.println(totalMovement);
+//        return !isMoving;
+        if (isMoving) {
+            numContinuousNoMovementFrames = 0;
+        } else {
+            numContinuousNoMovementFrames++;
+        }
+        return numContinuousNoMovementFrames >= maxNoMovementFrames;
     }
     
     void ClassifyGesture(SignData gesture) {

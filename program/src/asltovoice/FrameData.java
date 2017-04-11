@@ -30,6 +30,20 @@ public class FrameData {
     }
     public Vector3 zero = new Vector3();
 
+    public FrameData() {
+         armPos = new Vector3();
+         armRot = new Vector3();
+         handPos = new Vector3();
+         handRot = new Vector3();
+         handVel = new Vector3();
+         for (int i=0; i<5; i++) {
+            fingerPos[i] = new Vector3();
+            fingerRot[i] = new Vector3();
+            fingerVel[i] = new Vector3();
+         }
+         //fingerPos[0].x = -1;
+    }
+    
     // Loads comma seperated values into the correct variables
     public void LoadData(String textValues) {
         String[] dataValues = textValues.split(", ");
@@ -209,6 +223,11 @@ public class FrameData {
         fingerPos = new Vector3[5];
         fingerRot = new Vector3[5];
         fingerVel = new Vector3[5];
+        for (int i=0; i<5; i++) {
+            fingerPos[i] = zero;
+            fingerRot[i] = zero;
+            fingerVel[i] = zero;
+         }
         sign = "";
     }
 }
