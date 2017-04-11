@@ -30,7 +30,7 @@ public class SignData {
                 avg[j] = 0;
                 for (int k=i; k<i+(int)framesPerFramei; k++) {
                     avg[j] += allData.get(k)[j+4]; 
-                    System.out.print(allData.get(k)[j+4]+",");
+//                    System.out.print(allData.get(k)[j+4]+",");
                 }
                 avg[j] /= framesPerFrame;
             }
@@ -63,12 +63,12 @@ public class SignData {
         ArrayList<double[]> normalizedData = new ArrayList<double[]>();
         for (int i=0; i<normalizedNumFrames; i++) {
             double[] avg = new double[dataPerFrame];
-            for (int j=4; j<4+dataPerFrame; j++) {
-                avg[j] = 0;
+            for (int j=4; j<3+dataPerFrame; j++) {
+                avg[j-4] = 0;
                 for (int k=i; k<i+framesPerFrame; k++) {
-                    avg[j] += allData.get(k)[j]; 
+                    avg[j-4] += allData.get(k)[j]; 
                 }
-                avg[j] /= framesPerFrame;
+                avg[j-4] /= framesPerFrame;
             }
             normalizedData.add(avg);
         }

@@ -21,7 +21,7 @@ public class GestureInterpreter {
     // sensitivity to end gesture
     public float minMovementAmount = 125f;
     // time required to end gesture
-    public int maxNoMovementFrames = 30;
+    public int maxNoMovementFrames = 15;
     
     int numContinuousNoMovementFrames = 0;
     public boolean needsRebuilding = true;
@@ -151,7 +151,7 @@ public class GestureInterpreter {
         try {
             DenseInstance di = new DenseInstance(trainingData.numAttributes());
             
-            for (int i = 0; i < trainingData.numAttributes(); i++) {
+            for (int i = 0; i < trainingData.numAttributes()-1; i++) {
                 di.setValue(i, newData[i]);
             }
             di.setDataset(trainingData);

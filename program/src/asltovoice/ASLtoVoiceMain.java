@@ -40,7 +40,7 @@ public class ASLtoVoiceMain {
     
     public static void main(String[] args) {
         tts.allocate();
-        tts.mute = true;
+//        tts.mute = true;
         //ml.tts = tts;
         while (running) {
             connected = leapSensor.ControllerConnected();
@@ -195,7 +195,7 @@ public class ASLtoVoiceMain {
 //                System.out.println("printing curframe");
 //                curSign.frames.get(curSign.frames.size()-1).PrintAll();
                 if (gestureInterpreter.IsSignOver(leapSensor.curFrame)) {
-                    curSign.RemoveLast(gestureInterpreter.maxNoMovementFrames);
+                    //curSign.RemoveLast(gestureInterpreter.maxNoMovementFrames);
                     break;
                 }
                 //System.out.print("\n");
@@ -244,7 +244,7 @@ public class ASLtoVoiceMain {
                     System.out.println("Did you sign: "+guessSign+"?");
                     curSign.Clear();
                 }
-                System.out.print("\n");
+//                System.out.print("\n");
             } else {
                 System.out.println("Hand not detected!");
                 // wait until hand is detected
@@ -298,8 +298,8 @@ public class ASLtoVoiceMain {
         sb.append(curSign.GetNormalizedHeaderLine());
         sb.append('\n');
         // add data
-        curSign.frames.get(curSign.frames.size()-1).PrintAll();
-        for (int i=0; i<allSigns.size(); i++) {
+        ///curSign.frames.get(curSign.frames.size()-1).PrintAll();
+        for (int i=0; i<allSigns.size(); i++) { //TODO: fix this
             sb.append(allSigns.get(i).GetNormalizedDataString());
             sb.append("\n");
         }
