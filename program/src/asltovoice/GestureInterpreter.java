@@ -92,6 +92,24 @@ public class GestureInterpreter {
         return classficationType.toString();
     }
     
+    public void SetClassificationType(int ct) {
+        if (ct==0) {
+            SetClassificationType(ClassificationType.IBk);
+        }
+        if (ct==1) {
+            SetClassificationType(ClassificationType.MultilayerPerceptron);
+        }
+        if (ct==2) {
+            SetClassificationType(ClassificationType.J48);
+        }
+        if (ct==3) {
+            SetClassificationType(ClassificationType.SMO);
+        }
+        if (ct==4) {
+            SetClassificationType(ClassificationType.NaiveBayes);
+        }
+    }
+    
     void SetClassificationType(ClassificationType ct) {
         switch (ct) {
             case IBk:
@@ -110,6 +128,9 @@ public class GestureInterpreter {
                 break;
             case SMO:
                 classifier = new SMO();
+                break;
+            case NaiveBayes:
+                classifier = new NaiveBayes();
                 break;
             default:
                 System.out.println("ERROR: classifier not implemented!");
