@@ -59,16 +59,17 @@ public class SignData {
             allData.add(frames.get(i).GetDoubleData());
         }
         int dataPerFrame = allData.get(0).length - 4;// remove id, time, curframe, and totalframes
+        // TODO: find most important frames to keep instead of normalizing them all equally
         int framesPerFrame = normalizedNumFrames / frames.size();
         ArrayList<double[]> normalizedData = new ArrayList<double[]>();
         for (int i=0; i<normalizedNumFrames; i++) {
             double[] avg = new double[dataPerFrame];
-            for (int j=4; j<3+dataPerFrame; j++) {
-                avg[j-4] = 0;
-                for (int k=i; k<i+framesPerFrame; k++) {
-                    avg[j-4] += allData.get(k)[j]; 
+            for (int j=0; j<dataPerFrame-1; j++) {
+                avg[j] = 0;
+                for (int k=i; k<i+framesPerFrame && k<allData.size(); k++) {
+                    avg[j] += allData.get(k)[j+4];// this is to offset by 4
                 }
-                avg[j-4] /= framesPerFrame;
+                avg[j] /= framesPerFrame;
             }
             normalizedData.add(avg);
         }

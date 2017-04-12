@@ -25,25 +25,27 @@ public class LeapSensor {
                 curFrame.time = (int)curTime;
                 // add right hand then left hand to records, 0s if not available
                 Hand hand = hands.get(0);
-                if (hand.isRight()) {
-                    // this is the right hand
-                    RecordHand(hand);
-                    if(hands.count() > 1) {
-                        Hand lhand = hands.get(1);
-                        RecordHand(lhand);
-                    } else {
-                        RecordHand(null);
-                    }
-                } else {
-                    // this is the left hand
-                    if(hands.count() > 1) {
-                        Hand rhand = hands.get(1);
-                        RecordHand(rhand);
-                    } else {
-                        RecordHand(null);
-                    }
-                    RecordHand(hand);
-                }
+                RecordHand(hand);
+                // TODO: two hands
+//                if (hand.isRight()) {
+//                    // this is the right hand
+//                    RecordHand(hand);
+//                    if(hands.count() > 1) {
+//                        Hand lhand = hands.get(1);
+//                        RecordHand(lhand);
+//                    } else {
+//                        RecordHand(null);
+//                    }
+//                } else {
+//                    // this is the left hand
+//                    if(hands.count() > 1) {
+//                        Hand rhand = hands.get(1);
+//                        RecordHand(rhand);
+//                    } else {
+//                        RecordHand(null);
+//                    }
+//                    RecordHand(hand);
+//                }
                 numFrames++;
             } else {
                 // no hands!
@@ -64,11 +66,7 @@ public class LeapSensor {
         // currently arm, hand, and finger pos rot and vel
         // TODO: left vs right hands
         Arm arm = hand.arm();
-        if (!arm.isValid()) {
-            // for (int i=0; i<6; i++) {
-            //     curFrame. = 0f;
-            // }
-        } else {
+        if (arm.isValid()) {
             Vector armPos = arm.elbowPosition();
             curFrame.armPos.x = armPos.getX();
             curFrame.armPos.y = armPos.getY();
@@ -99,7 +97,7 @@ public class LeapSensor {
             Finger f = fingers.get(i);
             // finger pos relative to hand
             Vector fPos = f.tipPosition().minus(handPos);
-            curFrame.fingerPos[i].x = 1;//fPos.getX();
+            curFrame.fingerPos[i].x = fPos.getX();
             curFrame.fingerPos[i].y = fPos.getY();
             curFrame.fingerPos[i].z = fPos.getZ();
             Vector fDir = f.direction();
@@ -127,7 +125,7 @@ public class LeapSensor {
         ClearFrameData();
         lastFrameID = 0;
         numFrames = 0;
-        recordStartTimeN = System.currentTimeMillis(); // current time millis ?
+        recordStartTimeN = System.currentTimeMillis();
     }
 
     // clear the data we recorded

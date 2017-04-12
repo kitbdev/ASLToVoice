@@ -291,7 +291,7 @@ public class ASLtoVoiceMain {
             LocalDateTime date = LocalDateTime.now();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("kkmmss_ddMMyy");//hourminutesecond_daymonthyear
             filename += date.format(formatter);
-            // TODO: add types of classes to path?
+            filename += "_" + curSign.sign;
         } else {
             filename += fname;
         }
@@ -300,9 +300,7 @@ public class ASLtoVoiceMain {
         }
         // create the file
         System.out.println("Saving to " + filename);
-//        boolean fileExists = false;
         try {
-//            openFile = new PrintWriter(new File(filename));
             FileWriter openFile = new FileWriter(filename,true); //the true will append the new data
             // add data to the file
             StringBuilder sb = new StringBuilder();
@@ -314,7 +312,6 @@ public class ASLtoVoiceMain {
             sb.append("\n");
 
             openFile.write(sb.toString());
-    //        openFile.append(sb.toString());
             openFile.close();
             System.out.println("Save finished");
             return filename;

@@ -122,6 +122,7 @@ public class GestureInterpreter {
                 mp.setMomentum(0.2);
                 mp.setTrainingTime(2000);
                 mp.setHiddenLayers("3");
+                // TODO: do others need default parameters?
                 classifier = mp;
                 break;
             case J48:
@@ -139,8 +140,8 @@ public class GestureInterpreter {
         classficationType = ct;
         needsRebuilding = true;
     }
-    // TODO make sure this works
-    // TODO operate on entire current sign?
+    // TODO: improve this
+    // TODO: operate on entire current sign instead?
     boolean IsSignOver(FrameData frame) {
         float totalMovement = 0.0f;
         boolean isMoving = false;
