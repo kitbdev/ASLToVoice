@@ -2,6 +2,8 @@ package asltovoice;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.LocalDateTime;
@@ -13,6 +15,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /*
@@ -30,7 +34,7 @@ public class ASLtoVoiceMain {
     public static TTS tts = new TTS();
 
     public static SignData curSign = new SignData();
-    public static ArrayList<SignData> allSigns = new ArrayList<SignData>();
+    //public static ArrayList<SignData> allSigns = new ArrayList<SignData>();
 
 //    public static boolean devMode = true; // enables saving to a file for recording training data
     public static boolean running = true;
@@ -83,16 +87,8 @@ public class ASLtoVoiceMain {
             }
             RecordIn(com[1], recDelay);
         }
-        if ("undo".equals(command) || "u".equals(command)) {
-            if (allSigns.size() < 1) {
-                System.out.println("No sign to undo");
-            } else {
-                allSigns.remove(allSigns.size() - 1);
-                System.out.println("Removed the last sign from the list");
-            }
-        }
         if ("clear".equals(command) || "c".equals(command)) {
-            allSigns.clear();
+            curSign.Clear();
             System.out.println("Cleared all signs");
         }
         if ("test".equals(command) || "t".equals(command)) {
@@ -101,7 +97,7 @@ public class ASLtoVoiceMain {
                 return;
             }
             if (!gestureInterpreter.hasData) {
-                if (allSigns.size() < 1) {
+                if (curSign.hasEnoughFrames()) {
                     System.out.println("Load some data first!");
                     return;
                 }
@@ -134,10 +130,7 @@ public class ASLtoVoiceMain {
             Load(fname);
         }
         if ("view".equals(command) || "v".equals(command)) {
-            System.out.println(allSigns.size() + " signs recorded.");
-            for (int i = 0; i < allSigns.size(); i++) {
-                System.out.print(allSigns.get(i).sign + ", ");
-            }
+            System.out.println(curSign.GetAllData());
             System.out.println();
         }
         if ("save".equals(command) || "s".equals(command)) {
@@ -147,7 +140,7 @@ public class ASLtoVoiceMain {
             }
             Save(fname);
         }
-        if ("j".equals(command) || "say".equals(command)) {
+        if ("say".equals(command)) {
             if (com.length > 1) {
                 Say(com[1]);
             }
@@ -172,13 +165,16 @@ public class ASLtoVoiceMain {
         }
         try {
             RecordTrain(sign);
-        } catch (IOException | InterruptedException ex) {
+        } catch ( Exception ex) {
             System.out.println(ex);
         }
     }
 
     // records data to curSign from leap until the sign end is detected
     public static void RecordTrain(String sign) throws InterruptedException, IOException {
+        if (!connected) {
+            System.out.println("Connect to a leap sensor first!");
+        }
         System.out.println("Recording sign:" + sign);
         curSign.Clear();
         curSign.sign = sign;
@@ -198,10 +194,6 @@ public class ASLtoVoiceMain {
 
             if (gotFrame) {
                 curSign.AddFrame(leapSensor.curFrame);
-//                System.out.println("printing values");
-//                leapSensor.curFrame.PrintAll();
-//                System.out.println("printing curframe");
-//                curSign.frames.get(curSign.frames.size()-1).PrintAll();
                 if (gestureInterpreter.IsSignOver(leapSensor.curFrame)) {
                     //curSign.RemoveLast(gestureInterpreter.maxNoMovementFrames);
                     break;
@@ -209,8 +201,8 @@ public class ASLtoVoiceMain {
                 //System.out.print("\n");
             } else {
                 System.out.println("Hand not detected!");
-                // if hand still not detected after 2 seconds, stop recording
-                Thread.sleep(1000);
+                // if hand still not detected after .5 seconds, stop recording
+                Thread.sleep(500);
                 if (!leapSensor.HandAvailable()) {
                     System.out.println("Hand still not detected; Stopping recording.");
                     break;
@@ -224,7 +216,6 @@ public class ASLtoVoiceMain {
             }
             Thread.sleep(timeLeftThisFrame);// sleep for updates/sec-dt
         }
-        allSigns.add(curSign);
 //        System.out.println("last sign frame");
 //        int lastSign = allSigns.size() -1;
 //        int lastSignLastFrame = allSigns.get(lastSign).frames.size()-1;
@@ -233,7 +224,11 @@ public class ASLtoVoiceMain {
     }
 
     // records and tests for a sign 
-    public static String RecordTest() throws IOException, InterruptedException {
+    public static String RecordTest() throws InterruptedException, IOException {
+        if (!connected) {
+            System.out.println("Connect to a leap sensor first!");
+            return "";
+        }
         System.out.println("Recording signs to test");
         curSign.Clear();
         leapSensor.StartRecording();
@@ -286,10 +281,12 @@ public class ASLtoVoiceMain {
     public static String Save(String fname) {
         // get the filename
         String filename = "";
-        if (!fname.contains(saveLoc)) {
+        if (fname.contains("`")) {
             filename += saveLoc;
+            filename = fname.replace("`","");
         }
         if ("".equals(fname)) {
+            // default filename is td_[time]_[date].csv
             filename += "td_";
             LocalDateTime date = LocalDateTime.now();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("kkmmss_ddMMyy");//hourminutesecond_daymonthyear
@@ -298,38 +295,39 @@ public class ASLtoVoiceMain {
         } else {
             filename += fname;
         }
-        filename += ".csv";
+        if (!filename.contains(".csv")) {
+            filename += ".csv";
+        }
         // create the file
         System.out.println("Saving to " + filename);
-        PrintWriter openFile;
+//        boolean fileExists = false;
         try {
-            openFile = new PrintWriter(new File(filename));
-        } catch (FileNotFoundException e) {
-            System.out.println("Creating file failed." + e.getMessage());
-            return "";
-        }
-        // add data to the file
-        StringBuilder sb = new StringBuilder();
-        // add header line
-        sb.append(curSign.GetNormalizedHeaderLine());
-        sb.append('\n');
-        // add data
-        ///curSign.frames.get(curSign.frames.size()-1).PrintAll();
-        for (int i = 0; i < allSigns.size(); i++) { //TODO: fix this
-            sb.append(allSigns.get(i).GetNormalizedDataString());
+//            openFile = new PrintWriter(new File(filename));
+            FileWriter openFile = new FileWriter(filename,true); //the true will append the new data
+            // add data to the file
+            StringBuilder sb = new StringBuilder();
+            // add header line
+            sb.append(curSign.GetNormalizedHeaderLine());
+            sb.append('\n');
+            // add data
+            sb.append(curSign.GetNormalizedDataString());
             sb.append("\n");
-        }
-        openFile.write(sb.toString());
-        openFile.close();
-        System.out.println("Save finished");
-        return filename;
-    }
 
+            openFile.write(sb.toString());
+    //        openFile.append(sb.toString());
+            openFile.close();
+            System.out.println("Save finished");
+            return filename;
+        } catch (Exception e) {
+            System.out.println("Creating file failed." + e.getMessage());
+            return "ERROR";
+        }
+    }
     public static void Load(String fname) {
         String filename = "";
-        if (fname.contains(".SD")) {
+        if (fname.contains("`")) {
             filename += saveLoc;
-            fname.replace(".SD", "");
+            filename = fname.replace("`","");
         }
         filename += fname;
         if (!filename.contains(".csv")) {

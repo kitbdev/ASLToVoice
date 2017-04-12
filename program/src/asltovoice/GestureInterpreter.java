@@ -21,7 +21,7 @@ public class GestureInterpreter {
     // sensitivity to end gesture
     public float minMovementAmount = 125f;
     // time required to end gesture
-    public int maxNoMovementFrames = 15;
+    public int maxNoMovementFrames = 14;
     
     int numContinuousNoMovementFrames = 0;
     public boolean needsRebuilding = true;
@@ -166,8 +166,8 @@ public class GestureInterpreter {
     
     String ClassifyGesture(double[] newData) {
         if (!hasData) {
-            System.out.println("load data");
-            return "ERROR: load data";
+            System.out.println("Please load data");
+            return "ERROR: no data";
         }
         
         try {

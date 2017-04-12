@@ -8,7 +8,7 @@ import java.util.ArrayList;
 // includes time taken, number of frames, and other needed info
 public class SignData {
     
-    public int totalDuration; // in ms
+    public long totalDuration; // in ms
     public FrameData.Vector3 totalHandMovement;
     public ArrayList<FrameData> frames = new ArrayList<FrameData>();
     public String sign;
@@ -111,6 +111,8 @@ public class SignData {
     
     public void AddFrame(FrameData frame) {
         frames.add(frame);
+        totalDuration = frame.time;
+        
     }
     public void RemoveLast(int amount) {
         for (int i=0;i<amount;i++) {
@@ -122,6 +124,9 @@ public class SignData {
         //totalHandMovement = FrameData.Vector3();
         frames.clear();
         sign = "";
+    }
+    public boolean hasEnoughFrames() {
+        return frames.size() > normalizedNumFrames;
     }
     public String GetHeaderLine() {
         StringBuilder sb = new StringBuilder();

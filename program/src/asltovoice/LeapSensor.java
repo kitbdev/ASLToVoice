@@ -21,7 +21,7 @@ public class LeapSensor {
             if (hands.count() > 0) {
                 ClearFrameData();
                 // add time since start frame
-                long curTime = System.nanoTime() - recordStartTimeN;
+                long curTime = System.currentTimeMillis()- recordStartTimeN;
                 curFrame.time = (int)curTime;
                 // add right hand then left hand to records, 0s if not available
                 Hand hand = hands.get(0);
@@ -123,10 +123,11 @@ public class LeapSensor {
     
     // start recording with the leap
     public void StartRecording() {
+        controller.setPolicy(Controller.PolicyFlag.POLICY_BACKGROUND_FRAMES);
         ClearFrameData();
         lastFrameID = 0;
         numFrames = 0;
-        recordStartTimeN = System.nanoTime(); // current time millis ?
+        recordStartTimeN = System.currentTimeMillis(); // current time millis ?
     }
 
     // clear the data we recorded
