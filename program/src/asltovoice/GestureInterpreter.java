@@ -54,6 +54,7 @@ public class GestureInterpreter {
             System.out.println(e);
             return;
         }
+        // classifier = (Classifier) weka.core.SerializationHelper.read(fileLoc);
         if (trainingData.numAttributes() != 323) {
             System.out.println("Unrecognized number of attributes: " + trainingData.numAttributes());
         }
