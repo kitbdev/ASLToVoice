@@ -194,7 +194,7 @@ public class ASLtoVoiceMain {
 
             if (gotFrame) {
                 curSign.AddFrame(leapSensor.curFrame);
-                if (gestureInterpreter.IsSignOver(leapSensor.curFrame)) {
+                if (gestureInterpreter.IsSignOver(curSign)) {
                     //curSign.RemoveLast(gestureInterpreter.maxNoMovementFrames);
                     break;
                 }
@@ -241,7 +241,7 @@ public class ASLtoVoiceMain {
             boolean gotFrame = leapSensor.RecordFrame();
             if (gotFrame) {
                 curSign.AddFrame(leapSensor.curFrame);
-                if (gestureInterpreter.IsSignOver(leapSensor.curFrame)) {
+                if (gestureInterpreter.IsSignOver(curSign)) {
                     break;
                 }
             } else {

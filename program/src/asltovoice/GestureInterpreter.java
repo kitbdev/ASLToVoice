@@ -142,7 +142,11 @@ public class GestureInterpreter {
     }
     // TODO: improve this
     // TODO: operate on entire current sign instead?
-    boolean IsSignOver(FrameData frame) {
+    boolean IsSignOver(SignData curSign) {
+        FrameData frame = curSign.frames.get(curSign.frames.size()-1);
+        if (curSign.frames.size() <= maxNoMovementFrames) {
+            return false;
+        }
         float totalMovement = 0.0f;
         boolean isMoving = false;
         totalMovement+=frame.handVel.magnitude();
