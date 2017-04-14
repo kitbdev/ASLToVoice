@@ -57,8 +57,8 @@ public class ASLtoVoiceMain {
     public static void CLI() {
         System.out.println("...");
         System.out.println("Leap is " + (connected ? "" : "not ") + "connected.");
-        System.out.println("exit, record (training data), undo (remove last sign), \n"
-                + "clear(remove all signs), test, load, view (recorded signs), or save(recorded data)");
+        System.out.println("exit, record (training data),\n"
+                + "clear(remove all signs), test, load, view (recorded sign), or save(recorded data)");
         System.out.println("Enter a command:");
         String[] com = scanner.nextLine().toLowerCase().trim().split(" ");
 //        System.out.println(">"+com.length+",");
@@ -283,7 +283,7 @@ public class ASLtoVoiceMain {
         String filename = "";
         if (fname.contains("`")) {
             filename += saveLoc;
-            filename = fname.replace("`","");
+            fname = fname.replace("`","");
         }
         if ("".equals(fname)) {
             // default filename is td_[time]_[date].csv
@@ -299,14 +299,21 @@ public class ASLtoVoiceMain {
             filename += ".csv";
         }
         // create the file
-        System.out.println("Saving to " + filename);
         try {
+            boolean hasFile = new File(filename).exists();
+            if (hasFile)
+                System.out.println("Saving to " + filename);
+            else
+                System.out.println("Appending to " + filename);
             FileWriter openFile = new FileWriter(filename,true); //the true will append the new data
+            
             // add data to the file
             StringBuilder sb = new StringBuilder();
-            // add header line
-            sb.append(curSign.GetNormalizedHeaderLine());
-            sb.append('\n');
+            if (!hasFile) {
+                // add header line
+                sb.append(curSign.GetNormalizedHeaderLine());
+                sb.append('\n');
+            }
             // add data
             sb.append(curSign.GetNormalizedDataString());
             sb.append("\n");
@@ -324,7 +331,7 @@ public class ASLtoVoiceMain {
         String filename = "";
         if (fname.contains("`")) {
             filename += saveLoc;
-            filename = fname.replace("`","");
+            fname = fname.replace("`","");
         }
         filename += fname;
         if (!filename.contains(".csv")) {
