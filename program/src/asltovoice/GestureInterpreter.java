@@ -144,9 +144,10 @@ public class GestureInterpreter {
     // TODO: operate on entire current sign instead?
     boolean IsSignOver(SignData curSign) {
         FrameData frame = curSign.frames.get(curSign.frames.size()-1);
-        if (curSign.frames.size() <= maxNoMovementFrames) {
+        if (curSign.frames.size() <= 17) {
             return false;
         }
+//        System.out.println(curSign.frames.size());
         float totalMovement = 0.0f;
         boolean isMoving = false;
         totalMovement+=frame.handVel.magnitude();
@@ -187,8 +188,8 @@ public class GestureInterpreter {
             String choosen = trainingData.classAttribute().value(chooseni);
             double[] choosenDistribution = classifier.distributionForInstance(di);
             double choosenprob = choosenDistribution[chooseni]*100;
-            System.out.print("choosen sign: "+choosen);
-            System.out.print("probability: "+((int)(choosenprob*100))/100.0+"%");
+            System.out.println("choosen sign: "+choosen);
+            System.out.println("probability: "+((int)(choosenprob*100))/100.0+"%");
             
             return choosen;
         } catch (Exception e) {

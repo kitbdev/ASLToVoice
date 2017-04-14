@@ -145,6 +145,11 @@ public class ASLtoVoiceMain {
                 Say(com[1]);
             }
         }
+        if ("classifier".equals(command)) {
+            if (com.length > 1) {
+                gestureInterpreter.SetClassificationType(Integer.parseInt(com[1]));
+            }
+        }
     }
 
     // starts recordTrain in specified seconds

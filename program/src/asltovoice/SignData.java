@@ -74,8 +74,9 @@ public class SignData {
             normalizedData.add(avg);
         }
         double[] data = new double[normalizedNumFrames*dataPerFrame+1];
-        double timeTaken = allData.get(0)[1] - allData.get(allData.size()-1)[1];
-        data[0] = timeTaken;
+//        double timeTaken = allData.get(0)[1] - allData.get(allData.size()-1)[1];
+//        data[0] = timeTaken;
+        data[0] = totalDuration;
         for (int i=0; i<normalizedNumFrames; i++) {
             System.arraycopy(normalizedData.get(0), 0, data, i*dataPerFrame+1, normalizedData.size());
         }
