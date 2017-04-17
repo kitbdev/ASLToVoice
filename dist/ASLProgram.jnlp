@@ -7,11 +7,9 @@
     <offline-allowed/>
   </information>
   <resources>
-    <j2se version="1.6+" java-vm-args="-Djava.library.path=\Users\Inna\Downloads\LeapDeveloperKit_2.3.1+31549_win\LeapSDK\lib\x64 "  href="http://java.sun.com/products/autodl/j2se"/>
-    <jar href="ASLProgram.jar" size="6232309" download="eager" />
-    <jar href="lib\LeapJava.jar" size="85041" download="eager" />
-    <jar href="lib\cmu_us_kal.jar" size="4899359" download="eager" />
-    <jar href="lib\cmulex.jar" size="599429" download="eager" />
+    <j2se version="1.6+" java-vm-args="-Djava.library.path=deps\LeapSDK\lib\x86 "  href="http://java.sun.com/products/autodl/j2se"/>
+    <jar href="ASLProgram.jar" size="6232501" download="eager" />
+    <jar href="lib\LeapJava.jar" size="84203" download="eager" />
     <jar href="lib\en_us.jar" size="866598" download="eager" />
     <jar href="lib\freetts.jar" size="208668" download="eager" />
     <jar href="lib\weka.jar" size="10997325" download="eager" />
