@@ -1,1 +1,0 @@
-java -Djava.library.path="..\deps\LeapSDK\lib\x64;..\deps\freetts-1.2\lib" -jar "..\program\dist\ASLToVoice.jar"

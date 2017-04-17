@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.geometry.Rectangle2D?>
+<?import javafx.scene.control.Accordion?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.effect.InnerShadow?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<fx:root maxHeight="-Infinity" maxWidth="-Infinity" minHeight="500.0" minWidth="885.0" prefHeight="850.0" prefWidth="1920.0" type="AnchorPane" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="asl.MainController">
+   <children>
+      <AnchorPane fx:id="panel" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <ImageView opacity="0.87" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+               <image>
+                  <Image url="@slide-bg.jpg" />
+               </image>
+               <viewport>
+                  <Rectangle2D minX="500.0" minY="885.0" />
+               </viewport>
+            </ImageView>
+            <AnchorPane layoutX="37.5" layoutY="23.923357009887695" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="50.0">
+               <children>
+                  <SplitPane fx:id="bottomPane" dividerPositions="0.5" layoutX="62.5" layoutY="376.0766429901123" maxHeight="-Infinity" maxWidth="-Infinity" opacity="0.78" prefHeight="500.0" prefWidth="1800.0" AnchorPane.leftAnchor="100.0" AnchorPane.rightAnchor="100.0">
+                    <items>
+                      <AnchorPane fx:id="viz_panel" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="500.0" minWidth="201.0" prefHeight="500.0" prefWidth="900.0" />
+                        <Accordion>
+                          <panes>
+                            <TitledPane fx:id="loadPane" animated="false" onMouseClicked="#modeChange" text="Test Sign">
+                              <content>
+                                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                       <children>
+                                          <VBox fx:id="classifierPanel" alignment="CENTER_LEFT" layoutX="218.0" layoutY="49.0" spacing="20.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                             <children>
+                                                <Label prefHeight="34.0" prefWidth="200.0" text="Classifier">
+                                                   <font>
+                                                      <Font name="Calisto MT" size="28.0" />
+                                                   </font>
+                                                </Label>
+                                                <ChoiceBox fx:id="classifierMenu" prefHeight="50.0" prefWidth="430.0" />
+                                                <Button fx:id="loadFile_bt" mnemonicParsing="false" onAction="#loadFile" text="Load File">
+                                                   <font>
+                                                      <Font name="Calisto MT" size="30.0" />
+                                                   </font>
+                                                </Button>
+                                             </children>
+                                             <padding>
+                                                <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
+                                             </padding>
+                                          </VBox>
+                                          <Button fx:id="test_bt" alignment="CENTER" layoutX="256.0" layoutY="104.0" mnemonicParsing="false" onAction="#testFile" prefHeight="170.0" prefWidth="335.0" scaleX="0.5" scaleY="0.5" text="Test Sign" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                             <font>
+                                                <Font name="Calisto MT" size="47.0" />
+                                             </font>
+                                             <padding>
+                                                <Insets bottom="50.0" left="50.0" right="50.0" top="50.0" />
+                                             </padding>
+                                             <opaqueInsets>
+                                                <Insets />
+                                             </opaqueInsets>
+                                          </Button>
+                                       </children>
+                                    </AnchorPane>
+                              </content>
+                                 <font>
+                                    <Font name="Broadway" size="30.0" />
+                                 </font>
+                            </TitledPane>
+                            <TitledPane fx:id="recordPane" animated="false" onMouseClicked="#modeChange" text="Record Sign">
+                              <content>
+                                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                       <children>
+                                          <VBox fx:id="signContainer" alignment="CENTER" layoutX="223.0" layoutY="91.0" prefHeight="257.0" prefWidth="497.0" spacing="30.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                             <children>
+                                                <HBox alignment="CENTER" maxWidth="-Infinity" prefHeight="50.0" prefWidth="350.0">
+                                                   <children>
+                                                      <Label layoutX="312.0" layoutY="-135.0" prefHeight="34.0" prefWidth="150.0" text="Sign name">
+                                                         <font>
+                                                            <Font name="Calisto MT" size="28.0" />
+                                                         </font>
+                                                      </Label>
+                                                      <TextField fx:id="signName" prefHeight="50.0" prefWidth="200.0" HBox.hgrow="NEVER" />
+                                                   </children>
+                                                </HBox>
+                                                <Button fx:id="record_bt" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" mnemonicParsing="false" onAction="#recordSign" prefHeight="58.0" prefWidth="163.0" text="Record">
+                                                   <font>
+                                                      <Font name="Calisto MT Bold" size="29.0" />
+                                                   </font>
+                                                </Button>
+                                             </children>
+                                             <padding>
+                                                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                                             </padding>
+                                          </VBox>
+                                          <HBox fx:id="saveContainer" alignment="CENTER" layoutX="214.0" layoutY="166.0" spacing="50.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                                             <children>
+                                                <Button fx:id="save_bt" mnemonicParsing="false" onAction="#onSaveFile" prefHeight="58.0" prefWidth="200.0" text="Save File">
+                                                   <font>
+                                                      <Font name="Calisto MT Bold" size="29.0" />
+                                                   </font>
+                                                </Button>
+                                                <Button fx:id="redo_bt" mnemonicParsing="false" onAction="#onRedo" prefHeight="58.0" prefWidth="217.0" text="Redo">
+                                                   <font>
+                                                      <Font name="Calisto MT Bold" size="29.0" />
+                                                   </font>
+                                                </Button>
+                                             </children>
+                                          </HBox>
+                                       </children>
+                                    </AnchorPane>
+                              </content>
+                                 <font>
+                                    <Font name="Broadway" size="30.0" />
+                                 </font>
+                            </TitledPane>
+                          </panes>
+                        </Accordion>
+                    </items>
+                     <effect>
+                        <InnerShadow choke="0.17" height="142.28" radius="52.760000000000005" width="70.76" />
+                     </effect>
+                  </SplitPane>
+                  <HBox depthTest="DISABLE" layoutX="62.5" layoutY="176.0766429901123" maxHeight="-Infinity" maxWidth="-Infinity" opacity="0.88" prefHeight="163.0" prefWidth="1720.0" style="-fx-alignment: center; -fx-background-color: LightGrey;" AnchorPane.leftAnchor="100.0" AnchorPane.rightAnchor="100.0">
+                     <children>
+                        <Label fx:id="feedback" text="Welcome to American Sign Language to Voice Interpreter" textFill="#196583" HBox.hgrow="NEVER">
+                           <font>
+                              <Font name="Georgia" size="38.0" />
+                           </font>
+                        </Label>
+                     </children>
+                     <effect>
+                        <InnerShadow choke="0.13" height="160.94" radius="61.5025" width="87.07" />
+                     </effect>
+                  </HBox>
+                  <HBox fx:id="label_mode_container" alignment="CENTER" layoutX="150.0" layoutY="14.0" minHeight="-Infinity" minWidth="-Infinity" prefHeight="100.0" prefWidth="449.0" style="-fx-background-color: #196583;" AnchorPane.leftAnchor="350.0" AnchorPane.rightAnchor="350.0" AnchorPane.topAnchor="25.0">
+                     <children>
+                        <Label fx:id="mode_text" alignment="CENTER" prefHeight="100.0" prefWidth="1320.0" style="-fx-background-color: #196575; -fx-border-radius: 10;" text="ASL to Voice" textAlignment="CENTER" textFill="WHITE" HBox.hgrow="NEVER">
+                           <font>
+                              <Font name="Goudy Old Style Bold" size="52.0" />
+                           </font>
+                           <opaqueInsets>
+                              <Insets />
+                           </opaqueInsets>
+                           <effect>
+                              <InnerShadow choke="0.78" color="#196583" height="30.0" radius="14.5" width="30.0" />
+                           </effect>
+                        </Label>
+                     </children>
+                     <effect>
+                        <InnerShadow blurType="GAUSSIAN" choke="0.17" height="53.66" radius="29.8275" width="67.65" />
+                     </effect>
+                  </HBox>
+               </children>
+            </AnchorPane>
+            <ImageView fitHeight="200.0" fitWidth="300.0" layoutX="-8.0" layoutY="-13.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@logo3.png" />
+               </image>
+               <viewport>
+                  <Rectangle2D minX="200.0" minY="150.0" />
+               </viewport>
+            </ImageView>
+         </children>
+      </AnchorPane>
+   </children>
+</fx:root>

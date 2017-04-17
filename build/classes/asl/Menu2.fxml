@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.effect.InnerShadow?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<fx:root maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="850.0" prefWidth="1920.0" type="AnchorPane" xmlns="http://javafx.com/javafx/8.0.111" xmlns:fx="http://javafx.com/fxml/1" fx:controller="asl.TrainingController">
+   <children>
+      <ImageView fitHeight="1080.0" fitWidth="1980.0" opacity="0.87" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <image>
+            <Image url="@slide-bg.jpg" />
+         </image>
+      </ImageView>
+      <HBox fx:id="label_mode_container" alignment="CENTER" layoutX="766.0" layoutY="66.0" minHeight="-Infinity" minWidth="-Infinity" prefHeight="100.0" prefWidth="449.0" style="-fx-background-color: LightBlue;">
+         <children>
+            <Label fx:id="mode_text" alignment="CENTER" prefHeight="61.0" prefWidth="350.0" style="-fx-background-color: SkyBlue; -fx-border-radius: 10;" text="Training Mode" textAlignment="CENTER">
+               <font>
+                  <Font name="Goudy Old Style Bold" size="52.0" />
+               </font>
+               <opaqueInsets>
+                  <Insets />
+               </opaqueInsets>
+               <effect>
+                  <InnerShadow choke="0.78" color="LIGHTBLUE" height="30.0" radius="14.5" width="30.0" />
+               </effect>
+            </Label>
+         </children>
+         <effect>
+            <InnerShadow blurType="GAUSSIAN" choke="0.17" height="53.66" radius="29.8275" width="67.65" />
+         </effect>
+      </HBox>
+      <HBox fx:id="toggle_container" layoutX="1587.0" layoutY="116.0" prefHeight="77.0" prefWidth="303.0" style="-fx-background-color: #00ced1;">
+         <children>
+            <Button fx:id="mode_bt" alignment="CENTER" contentDisplay="CENTER" mnemonicParsing="false" onAction="#modeChange" prefHeight="85.0" prefWidth="309.0" style="-fx-background-color: SteelBlue;" text="translate Mode" textFill="SKYBLUE" wrapText="true">
+               <font>
+                  <Font name="Perpetua Titling MT Bold" size="26.0" />
+               </font>
+               <effect>
+                  <InnerShadow color="#6cdacf" />
+               </effect>
+               <opaqueInsets>
+                  <Insets bottom="2.0" left="10.0" right="5.0" top="2.0" />
+               </opaqueInsets>
+            </Button>
+         </children>
+         <padding>
+            <Insets bottom="3.0" left="3.0" right="3.0" top="3.0" />
+         </padding>
+         <effect>
+            <InnerShadow choke="0.77" color="#000000cb" height="36.55" radius="19.33" width="42.77" />
+         </effect>
+      </HBox>
+      <SplitPane fx:id="bottomPane" dividerPositions="0.5" layoutX="90.0" layoutY="462.0" maxHeight="-Infinity" maxWidth="-Infinity" opacity="0.78" prefHeight="500.0" prefWidth="1800.0">
+        <items>
+          <AnchorPane fx:id="viz_panel" maxHeight="500.0" maxWidth="500.0" minHeight="500.0" minWidth="500.0" prefHeight="500.0" prefWidth="500.0" />
+          <AnchorPane fx:id="data" minHeight="0.0" minWidth="0.0" prefHeight="500.0" prefWidth="906.0">
+               <padding>
+                  <Insets bottom="40.0" left="40.0" right="40.0" top="40.0" />
+               </padding>
+               <children>
+                  <Label layoutY="27.0" prefHeight="42.0" prefWidth="1290.0" style="-fx-alignment: CENTER;" text="Add Sign ">
+                     <font>
+                        <Font name="Calisto MT Bold" size="32.0" />
+                     </font>
+                  </Label>
+                  <VBox fx:id="signContainer" alignment="CENTER" layoutX="403.0" layoutY="91.0" prefHeight="200.0" prefWidth="450.0" spacing="30.0">
+                     <children>
+                        <VBox spacing="10.0">
+                           <children>
+                              <HBox spacing="30.0">
+                                 <children>
+                                    <Label layoutX="312.0" layoutY="-135.0" prefHeight="34.0" prefWidth="200.0" text="Sign name">
+                                       <font>
+                                          <Font name="Calisto MT" size="28.0" />
+                                       </font>
+                                    </Label>
+                                    <TextField fx:id="signName" prefHeight="50.0" prefWidth="200.0" />
+                                 </children>
+                              </HBox>
+                           </children>
+                        </VBox>
+                        <VBox spacing="10.0">
+                           <children>
+                              <Label prefHeight="34.0" prefWidth="200.0" text="Classifier">
+                                 <font>
+                                    <Font name="Calisto MT" size="28.0" />
+                                 </font>
+                              </Label>
+                              <ChoiceBox fx:id="classifierMenu" prefHeight="50.0" prefWidth="430.0" />
+                           </children>
+                        </VBox>
+                        <Button fx:id="submit_sign_bt" alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" mnemonicParsing="false" onAction="#addSignSubmitted" onMouseClicked="#clicked" prefHeight="50.0" prefWidth="150.0" text="Submit" VBox.vgrow="SOMETIMES">
+                           <font>
+                              <Font name="Calisto MT Bold" size="29.0" />
+                           </font>
+                        </Button>
+                     </children>
+                     <padding>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                     </padding>
+                  </VBox>
+                  <Button fx:id="mode_bt1" alignment="CENTER" contentDisplay="CENTER" layoutX="1105.0" layoutY="425.0" mnemonicParsing="false" onAction="#modeChange" prefHeight="61.0" prefWidth="171.0" style="-fx-background-color: SteelBlue;" text="Next" textFill="SKYBLUE" wrapText="true">
+                     <font>
+                        <Font name="Perpetua Titling MT Bold" size="26.0" />
+                     </font>
+                     <effect>
+                        <InnerShadow color="#6cdacf" />
+                     </effect>
+                     <opaqueInsets>
+                        <Insets bottom="2.0" left="10.0" right="5.0" top="2.0" />
+                     </opaqueInsets>
+                  </Button>
+               </children>
+            </AnchorPane>
+        </items>
+         <effect>
+            <InnerShadow choke="0.17" height="142.28" radius="52.760000000000005" width="70.76" />
+         </effect>
+      </SplitPane>
+      <ImageView fx:id="logo" fitHeight="207.0" fitWidth="303.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@logo3.png" />
+         </image>
+      </ImageView>
+      <HBox depthTest="DISABLE" layoutX="90.0" layoutY="231.0" maxHeight="-Infinity" maxWidth="-Infinity" opacity="0.88" prefHeight="200.0" prefWidth="1800.0" style="-fx-alignment: center; -fx-background-color: LightGrey;">
+         <children>
+            <Label fx:id="feedback" text="Feedback" textFill="#196583">
+               <font>
+                  <Font name="Georgia" size="38.0" />
+               </font>
+            </Label>
+         </children>
+         <effect>
+            <InnerShadow choke="0.13" height="160.94" radius="61.5025" width="87.07" />
+         </effect>
+      </HBox>
+   </children>
+</fx:root>
