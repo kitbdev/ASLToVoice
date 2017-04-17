@@ -276,7 +276,7 @@ public class ASLtoVoiceMain {
         if (guessSign.contains("ERROR")) {
             // uh oh
         }
-        System.out.println("Did you sign: " + guessSign + "?");
+        System.out.println("Did you sign: " + guessSign + "");
         tts.speak(guessSign);
         curSign.Clear();
         return guessSign;

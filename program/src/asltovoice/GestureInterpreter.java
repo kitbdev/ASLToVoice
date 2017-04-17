@@ -95,18 +95,23 @@ public class GestureInterpreter {
     
     public void SetClassificationType(int ct) {
         if (ct==0) {
+            System.out.println("Classifier: IBk");
             SetClassificationType(ClassificationType.IBk);
         }
         if (ct==1) {
+            System.out.println("Classifier: MultilayerPerceptron");
             SetClassificationType(ClassificationType.MultilayerPerceptron);
         }
         if (ct==2) {
+            System.out.println("Classifier: J48");
             SetClassificationType(ClassificationType.J48);
         }
         if (ct==3) {
+            System.out.println("Classifier: SMO");
             SetClassificationType(ClassificationType.SMO);
         }
         if (ct==4) {
+            System.out.println("Classifier: NaiveBayes");
             SetClassificationType(ClassificationType.NaiveBayes);
         }
     }
@@ -161,7 +166,7 @@ public class GestureInterpreter {
             }
         }
         //TODO: test total movement instead of individual movement?
-        System.out.println(totalMovement);
+//        System.out.println(totalMovement);
         if (isMoving) {
             numContinuousNoMovementFrames = 0;
         } else {
