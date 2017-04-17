@@ -167,8 +167,8 @@ public class ASLtoVoiceMain {
         }
         try {
             RecordTrain(sign);
-        } catch ( Exception ex) {
-            System.out.println(ex);
+        } catch ( Exception e) {
+            System.out.println(e);
         }
     }
 
@@ -253,7 +253,6 @@ public class ASLtoVoiceMain {
                     //curSign.RemoveLast(gestureInterpreter.maxNoMovementFrames);
                     break;
                 }
-                //System.out.print("\n");
             } else {
                 System.out.println("Hand not detected!");
                 // if hand still not detected after .5 seconds, stop recording

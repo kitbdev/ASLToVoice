@@ -83,14 +83,14 @@ public class MainController implements Initializable {
     @FXML
     private Label feedback;
     private boolean isFileLoaded = false;
-    ASLtoVoiceMain aslInterpreter ;
+    ASLtoVoiceMain aslInterpreter;
     @FXML
     private VBox classifierPanel;
     @FXML
     private Button redo_bt;
     @FXML
     private HBox saveContainer;
-    private final List <String> classifiers = Arrays.asList("IBk","MultilayerPerceptron","J48","SMO","NaiveBayes");
+    private final List<String> classifiers = Arrays.asList("IBk", "MultilayerPerceptron", "J48", "SMO", "NaiveBayes");
     @FXML
     private AnchorPane panel;
 
@@ -100,45 +100,42 @@ public class MainController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         aslInterpreter = new ASLtoVoiceMain();
-        classifierMenu.autosize();        
+        classifierMenu.autosize();
         classifierMenu.getItems().addAll(classifiers);
         classifierMenu.setValue(classifiers.get(0));
-        
+
         test_bt.setVisible(false);
         saveContainer.setVisible(false);
 
-    }    
+    }
 
     @FXML
     private void loadFile(ActionEvent event) {
-        for (String s: classifiers){
-            if (s == null ? classifierMenu.getValue() == null : s.equals(classifierMenu.getValue()))
-            {
+        for (String s : classifiers) {
+            if (s == null ? classifierMenu.getValue() == null : s.equals(classifierMenu.getValue())) {
                 aslInterpreter.gestureInterpreter.SetClassificationType(classifiers.indexOf(s));
                 break;
             }
         }
-        
-         
+
         FileChooser browser = new FileChooser();
         browser.getExtensionFilters().addAll(new ExtensionFilter("CSV Files", "*.csv"));
         browser.setInitialDirectory(new File("C:\\Users\\Inna\\Documents\\NetBeansProjects\\AAA"));
         File file = browser.showOpenDialog(null);
-        
-        if (file != null){
-           ASLtoVoiceMain.Load(file.getName());
-           isFileLoaded = true;
-           classifierPanel.setVisible(false);
-           test_bt.setVisible(true);
-        }
-        
-    }
 
+        if (file != null) {
+            ASLtoVoiceMain.Load(file.getName());
+            isFileLoaded = true;
+            classifierPanel.setVisible(false);
+            test_bt.setVisible(true);
+        }
+
+    }
 
     @FXML
     private void testFile(ActionEvent event) throws InterruptedException, IOException {
         capture(false);
-        
+
 //        LeapApp.getController().setPolicy(Controller.PolicyFlag.POLICY_BACKGROUND_FRAMES);
 //        if (isFileLoaded)
 //        {
@@ -159,10 +156,9 @@ public class MainController implements Initializable {
 //        }
 //        classifierPanel.setVisible(true);
 //        System.out.println("LeapApp policy: "+LeapApp.getController().isPolicySet(Controller.PolicyFlag.POLICY_IMAGES));
-        
     }
-    private void resetAll()
-    {
+
+    private void resetAll() {
         signName.setText("");
         aslInterpreter.curSign.Clear();
         signContainer.setVisible(true);
@@ -174,79 +170,71 @@ public class MainController implements Initializable {
 
     @FXML
     private void modeChange(MouseEvent event) {
-        TitledPane pane = (TitledPane)event.getSource();
-        if (pane.isExpanded() && pane == recordPane)
-        {
+        TitledPane pane = (TitledPane) event.getSource();
+        if (pane.isExpanded() && pane == recordPane) {
             mode_text.setText("Training Mode");
             resetAll();
-        }
-        else if (pane.isExpanded() &&  pane == loadPane)
-        {
+        } else if (pane.isExpanded() && pane == loadPane) {
             mode_text.setText("Testing Mode");
-           resetAll();
-        }
-        else if(!pane.isExpanded())
+            resetAll();
+        } else if (!pane.isExpanded()) {
             mode_text.setText("ASL to Voice");
- 
-        
+        }
+
     }
 
     @FXML
     private void recordSign(ActionEvent event) throws InterruptedException, IOException {
-       capture(true);
+        capture(true);
     }
-    
-    public void capture(boolean choice)
-    {
+
+    public void capture(boolean choice) {
         Timeline timeline = new Timeline(
-                    new KeyFrame(Duration.seconds(0), ae -> feedback.setText("Capturing...")),
-                    new KeyFrame(Duration.seconds(1), ae -> choose(choice)));
+                new KeyFrame(Duration.seconds(0), ae -> feedback.setText("Capturing...")),
+                new KeyFrame(Duration.seconds(1), ae -> choose(choice)));
         timeline.setCycleCount(1);
         timeline.play();
-                   
+
     }
-    private void choose(boolean choice)
-    {
-        if (choice)
+
+    private void choose(boolean choice) {
+        if (choice) {
             recordTRAIN();
-        else
+        } else {
             recordTEST();
+        }
     }
-    private void recordTRAIN(){
-          if (signName !=null)
-        {
+
+    private void recordTRAIN() {
+        if (signName != null) {
             try {
-            long curr_time = System.currentTimeMillis();
-            Timer timer = new Timer();
-            timer.scheduleAtFixedRate(new TimerTask(){ 
-                @Override
-                public void run(){
-                            try {
-                                if (ASLtoVoiceMain.RecordTrain(signName.getText()))
-                                {                     
-                                    feedback.setText("Captured");
-                                    signContainer.setVisible(false);
-                                    saveContainer.setVisible(true); 
-                                   
-                                    System.out.println("Platform response: "+ Platform.isFxApplicationThread());
-                                    Platform.isFxApplicationThread();
-                                    timer.cancel();
-                                    
-                                }
+                long curr_time = System.currentTimeMillis();
+                Timer timer = new Timer();
+                timer.scheduleAtFixedRate(new TimerTask() {
+                    @Override
+                    public void run() {
+                        try {
+                            if (ASLtoVoiceMain.RecordTrain(signName.getText())) {
+                                feedback.setText("Captured");
+                                signContainer.setVisible(false);
+                                saveContainer.setVisible(true);
+
+                                System.out.println("Platform response: " + Platform.isFxApplicationThread());
+                                Platform.isFxApplicationThread();
+                                timer.cancel();
+
                             }
-                            catch (InterruptedException | IOException ex ) {
-                            Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (Exception e) {
+                            System.out.println(e);
+                        }
+
                     }
-             
-                }
-        },0, 100);
-        }  
-        
-          catch(Exception e){
-              System.out.println("OOPS, I don't care");
-          
-          }
-        
+                }, 0, 100);
+            } catch (Exception e) {
+                System.out.println(e);
+
+            }
+
 //        if (signName !=null)
 //        {
 //            long curr_time = System.currentTimeMillis();
@@ -277,35 +265,31 @@ public class MainController implements Initializable {
 //        }        
         }
     }
-    
-     private void recordTEST(){         
-         
-         if (isFileLoaded)
-        {
+
+    private void recordTEST() {
+
+        if (isFileLoaded) {
             String feed = "";
             long curr_time = System.currentTimeMillis();
             Timer timer = new Timer();
-            timer.scheduleAtFixedRate(new TimerTask(){ 
+            timer.scheduleAtFixedRate(new TimerTask() {
                 @Override
-                public void run(){
-                   try {
-                                if (ASLtoVoiceMain.RecordTest())
-                                {                           
-                                    feedback.setText(ASLtoVoiceMain.getSignName());
-                                    aslInterpreter.Say(feed);
-                                    //feedback.setText("Captured");
-                                    timer.cancel();
-                                    feedback.setText("Captured");
-                                }
-                            }
-                            catch (InterruptedException | IOException ex ) {
-                            Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+                public void run() {
+                    try {
+                        if (ASLtoVoiceMain.RecordTest()) {
+                            feedback.setText(ASLtoVoiceMain.getSignName());
+                            aslInterpreter.Say(feed);
+                            //feedback.setText("Captured");
+                            timer.cancel();
+                            feedback.setText("Captured");
+                        }
+                    } catch (Exception e) {
+                        System.out.println(e);
                     }
-             
-                        
+
                 }
-        },0, 100);
-        }    
+            }, 0, 100);
+        }
 //        if (isFileLoaded)
 //        {
 //            try {
@@ -345,20 +329,20 @@ public class MainController implements Initializable {
 //        }
 //        classifierPanel.setVisible(true);
 //        test_bt.setVisible(false);
-     }
+    }
 
     @FXML
     private void onSaveFile(ActionEvent event) {
         FileChooser browser = new FileChooser();
         browser.getExtensionFilters().addAll(new ExtensionFilter("CSV Files", "*.csv"));
-         browser.setInitialDirectory(new File("C:\\Users\\Inna\\Documents\\NetBeansProjects\\AAA"));
+        browser.setInitialDirectory(new File("C:\\Users\\Inna\\Documents\\NetBeansProjects\\AAA"));
         //System.out.print(browser.getInitialDirectory());
         browser.setTitle("Save CSV");
-       
+
         File file = browser.showSaveDialog(null);
-        
-         try {
-            FileWriter openFile = new FileWriter(file.getAbsolutePath(),true); //the true will append the new data
+
+        try {
+            FileWriter openFile = new FileWriter(file.getAbsolutePath(), true); //the true will append the new data
             // add data to the file
             StringBuilder sb = new StringBuilder();
             // add header line
@@ -370,13 +354,13 @@ public class MainController implements Initializable {
 
             openFile.write(sb.toString());
             openFile.close();
-           // System.out.println("Save finished");
+            // System.out.println("Save finished");
         } catch (IOException e) {
             System.out.println("Creating file failed." + e.getMessage());
         }
-            
+
         try {
-            FileWriter openFile = new FileWriter(file.getAbsolutePath(),true); //the true will append the new data
+            FileWriter openFile = new FileWriter(file.getAbsolutePath(), true); //the true will append the new data
             // add data to the file
             StringBuilder sb = new StringBuilder();
             // add header line
@@ -389,23 +373,20 @@ public class MainController implements Initializable {
             openFile.write(sb.toString());
             openFile.close();
             System.out.println("Save finished");
-            
-            
+
         } catch (Exception e) {
             System.out.println("Creating file failed." + e.getMessage());
-            
+
         }
         resetAll();
-        
+
     }
 
     @FXML
     private void onRedo(ActionEvent event) {
         aslInterpreter.curSign.Clear();
-        capture(true);    
-          
+        capture(true);
+
     }
 
-
-    
 }

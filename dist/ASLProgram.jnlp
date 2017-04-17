@@ -8,7 +8,7 @@
   </information>
   <resources>
     <j2se version="1.6+" java-vm-args="-Djava.library.path=deps\LeapSDK\lib\x86 "  href="http://java.sun.com/products/autodl/j2se"/>
-    <jar href="ASLProgram.jar" size="6232501" download="eager" />
+    <jar href="ASLProgram.jar" size="4604717" download="eager" />
     <jar href="lib\LeapJava.jar" size="84203" download="eager" />
     <jar href="lib\en_us.jar" size="866598" download="eager" />
     <jar href="lib\freetts.jar" size="208668" download="eager" />
